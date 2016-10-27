@@ -1,0 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Oct 26 17:16:34 2016
+
+@author: avarfolomeev
+"""
+
+f2 = plt.figure()
+ax1 = f2.add_subplot(121)
+ax2 = f2.add_subplot(322)
+ax3 = f2.add_subplot(324)
+ax4 = f2.add_subplot(326)
