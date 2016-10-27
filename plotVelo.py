@@ -9,13 +9,17 @@ import matplotlib.pyplot as plt
 
 
 
-def plot_velo(pnt,step=100, thr = 1.5):
+def plot_velo(pnt,step=100, thr = 1.5, do3d = False):
     #f2 = plt.figure()
     #ax2 = f2.add_subplot(111, projection='3d')
     
     stp = step or 100
-    ax1.cla()
-    ax1.axis([-15,10,-20,20])
+    if (do3d):
+        ax1_3d.cla()
+        ax1_3d.axis([-15,10,-20,20])
+    else:
+        ax1.cla()
+        ax1.axis([-15,10,-20,20])
     
 
     high = dataset.velo[pnt][:,2] > -thr
@@ -25,11 +29,18 @@ def plot_velo(pnt,step=100, thr = 1.5):
     r = range(0, idx.size, stp)
     h = idx[r]
     
-    ax1.scatter(dataset.velo[pnt][h, 1]*(-1),
-                dataset.velo[pnt][h, 0],
-                #dataset.velo[pnt][h, 2],
-                c=dataset.velo[pnt][h, 2]*50,
-                cmap='jet')
+    if (do3d):
+        ax1_3d.scatter(dataset.velo[pnt][h, 1]*(-1),
+                    dataset.velo[pnt][h, 0],
+                    dataset.velo[pnt][h, 2],
+                    c=dataset.velo[pnt][h, 2]*50,
+                    cmap='jet')
+    else:
+        ax1.scatter(dataset.velo[pnt][h, 1]*(-1),
+                    dataset.velo[pnt][h, 0],
+                    #dataset.velo[pnt][h, 2],
+                    c=dataset.velo[pnt][h, 2]*50,
+                    cmap='jet')
     
     ax2.imshow(dataset.rgb[pnt].left)
     ax3.imshow(dataset.rgb[pnt].right)
