@@ -13,10 +13,10 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import pykitti
 import cv2
-basedir='e:/data/datasets/kitti'
+basedir='F:/Datasets/kitti'
 date = '2011_09_26'
-drive = '0059'
-frame_range = range(0, 100, 1)
+drive = '0117'
+frame_range = range(0, 500, 1)
 dataset = pykitti.raw(basedir, date, drive, frame_range)
 dataset.load_gray()
 dataset.load_velo()
@@ -25,4 +25,5 @@ dataset.load_rgb()
 
 
 
-#runfile('plotVelo.py')
+runfile('plotVelo.py')
+runfile('setFigure.py')

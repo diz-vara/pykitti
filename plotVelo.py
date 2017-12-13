@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 
 
 
-def plot_velo(pnt,step=100, thr = 1.5, do3d = False):
+def plot_velo(pnt,step=100, thr = 3, do3d = False):
     #f2 = plt.figure()
     #ax2 = f2.add_subplot(111, projection='3d')
-    fwlim = 60
+    fwlim = 30
     backlim = -10
     leftlim = -12
     rightlim = 12
@@ -48,7 +48,9 @@ def plot_velo(pnt,step=100, thr = 1.5, do3d = False):
                 v[h, 0],
                 #dataset.velo[pnt][h, 2],
                 c=v[h, 2]*50,
-                cmap='jet')
+                cmap='jet',
+                marker='.',
+                edgecolors='face')
     
 
     if (do3d):
@@ -56,7 +58,10 @@ def plot_velo(pnt,step=100, thr = 1.5, do3d = False):
                     v[h, 0],
                     v[h, 2],
                     c=v[h, 2]*50,
-                    cmap='jet')
+                    cmap='jet',
+                    marker='.',
+                    edgecolors='face')
+                    
     else:
         ax4.imshow(dataset.gray[pnt].left,cmap='gray')
     
