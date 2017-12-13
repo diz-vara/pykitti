@@ -5,8 +5,8 @@ Created on Wed Dec 13 16:59:01 2017
 @author: avarfolomeev
 """
 
-leftlim=-3.8
-rightlim=3
+leftlim=-4
+rightlim=2.8
 fwlim = 11
 backlim=4
 

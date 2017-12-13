@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 def plot_velo(pnt,step=100, thr = 3, do3d = False):
     #f2 = plt.figure()
     #ax2 = f2.add_subplot(111, projection='3d')
-    fwlim = 30
+    fwlim = 15
     backlim = -10
     leftlim = -12
     rightlim = 12
@@ -61,7 +61,32 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
                     edgecolors='face')
                     
     else:
-        ax4.imshow(dataset.gray[pnt].left,cmap='gray')
+        leftlim=-4
+        rightlim=2.8
+        fwlim = 11
+        backlim=4
+
+        left = v[:,1] < -leftlim
+        right = v[:,1] > -rightlim
+        back = v[:,0] > backlim
+        fw = v[:,0] < fwlim
+ 
+        h = v[:,2] > -thr 
+        hu = v[:,2] < -1.5
+
+        h = h & hu & left & right & back & fw
+        numPoints = v.shape[0]
+        idx = np.arange(0,numPoints)[h]
+        ax4.cla()
+        ax4.scatter(v[idx, 1]*-1,
+                v[idx, 0],
+                #dataset.velo[pnt][h, 2],
+                c=v[idx, 2]*50,
+                cmap='jet',
+                marker='.',
+                edgecolors='face')
+        
+        #ax4.imshow(dataset.gray[pnt].left,cmap='gray')
     
     if (hasattr(dataset,'rgb')):
         ax2.imshow(dataset.rgb[pnt].left)
