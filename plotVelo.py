@@ -41,23 +41,21 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
     numPoints = v.shape[0]
     idx = np.arange(0,numPoints)[high]
 
-    r = range(0, idx.size, stp)
-    h = idx[r]
 
-    ax1.scatter(v[h, 1]*(-1),
-                v[h, 0],
+    ax1.scatter(v[idx, 1]*(-1),
+                v[idx, 0],
                 #dataset.velo[pnt][h, 2],
-                c=v[h, 2]*50,
+                c=v[idx, 2]*50,
                 cmap='jet',
                 marker='.',
                 edgecolors='face')
     
 
     if (do3d):
-        ax1_3d.scatter(v[h, 1]*(-1),
-                    v[h, 0],
-                    v[h, 2],
-                    c=v[h, 2]*50,
+        ax1_3d.scatter(v[idx, 1]*(-1),
+                    v[idx, 0],
+                    v[idx, 2],
+                    c=v[idx, 2]*50,
                     cmap='jet',
                     marker='.',
                     edgecolors='face')
