@@ -14,14 +14,17 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
     #ax2 = f2.add_subplot(111, projection='3d')
     fwlim = 15
     backlim = -10
-    leftlim = -12
-    rightlim = 12
+    leftlim = -15
+    rightlim = 15
     
     
     stp = step or 100
     if (do3d):
-        ax1_3d.cla()
-        ax1_3d.axis([leftlim,rightlim,backlim,fwlim])
+        ax4 = f2.add_subplot(326,projection='3d')
+    else:
+        ax4 = f2.add_subplot(326)
+    ax4.cla()    
+        #ax1_3d.axis([leftlim,rightlim,backlim,fwlim])
 
     ax1.cla()
     ax1.axis([leftlim,rightlim,backlim,fwlim])
@@ -50,38 +53,36 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
                 marker='.',
                 edgecolors='face')
     
+    leftlim=-3.5
+    rightlim=2.8
+    fwlim = 11
+    backlim=4
 
-    if (do3d):
-        ax1_3d.scatter(v[idx, 1]*(-1),
-                    v[idx, 0],
-                    v[idx, 2],
-                    c=v[idx, 2]*50,
-                    cmap='jet',
-                    marker='.',
-                    edgecolors='face')
-                    
-    else:
-        leftlim=-4
-        rightlim=2.8
-        fwlim = 11
-        backlim=4
-
-        left = v[:,1] < -leftlim
-        right = v[:,1] > -rightlim
-        back = v[:,0] > backlim
-        fw = v[:,0] < fwlim
+    left = v[:,1] < -leftlim
+    right = v[:,1] > -rightlim
+    back = v[:,0] > backlim
+    fw = v[:,0] < fwlim
  
-        h = v[:,2] > -thr 
-        hu = v[:,2] < -1.5
+    h = v[:,2] > -thr 
+    hu = v[:,2] < -1.
 
-        h = h & hu & left & right & back & fw
-        numPoints = v.shape[0]
-        idx = np.arange(0,numPoints)[h]
-        ax4.cla()
+    h = h & hu & left & right & back & fw
+    numPoints = v.shape[0]
+    idx = np.arange(0,numPoints)[h]
+    ax4.cla()
+    if (do3d):
         ax4.scatter(v[idx, 1]*-1,
                 v[idx, 0],
-                #dataset.velo[pnt][h, 2],
-                c=v[idx, 2]*50,
+                v[idx, 2]+1.73,
+                c=v[idx, 2]+1.73,
+                cmap='jet',
+                marker='.',
+                edgecolors='face')
+    else:
+        ax4.scatter(v[idx, 1]*-1,
+                v[idx, 0],
+                #v[idx, 2],
+                c=v[idx, 2]+1.73,
                 cmap='jet',
                 marker='.',
                 edgecolors='face')
@@ -96,3 +97,4 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
         ax3.imshow(dataset.gray[pnt].right,cmap='gray')
         
     plt.show()
+    return v[idx,:]
