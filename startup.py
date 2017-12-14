@@ -16,7 +16,7 @@ import cv2
 basedir='F:/Datasets/kitti'
 date = '2011_09_26'
 drive = '0117'
-frame_range = range(0, 500, 1)
+frame_range = range(0, 659, 1)
 dataset = pykitti.raw(basedir, date, drive, frame_range)
 dataset.load_gray()
 dataset.load_velo()
