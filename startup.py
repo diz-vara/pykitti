@@ -23,6 +23,10 @@ dataset.load_velo()
 dataset.load_rgb()
 dataset.load_calib()
 
+Prect = dataset.calib.P_rect_20;
+Rrect = dataset.calib.R_rect_20;
+T_cam_velo = dataset.calib.T_cam2_velo;
+
 
 
 
