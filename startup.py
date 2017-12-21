@@ -14,9 +14,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import pykitti
 import cv2
 basedir='F:/Datasets/kitti'
-date = '2011_09_26'
-drive = '0117'
-frame_range = range(0, 650, 1)
+date = '2011_10_03'
+drive = '0042'
+frame_range = None
 dataset = pykitti.raw(basedir, date, drive, frame_range)
 #dataset.load_gray()
 dataset.load_velo()
@@ -28,7 +28,7 @@ Rrect = dataset.calib.R_rect_20;
 T_cam_velo = dataset.calib.T_cam2_velo;
 
 
-
+ %matplotlib qt5
 
 
 runfile('plotVelo.py')

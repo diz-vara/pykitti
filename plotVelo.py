@@ -9,27 +9,23 @@ import matplotlib.pyplot as plt
 
 
 
-def plot_velo(pnt,step=100, thr = 3, do3d = False):
+def plot_velo(v, img, mask, thr = 3, do3d = False):
     #f2 = plt.figure()
     #ax2 = f2.add_subplot(111, projection='3d')
-    fwlim = 15
+    fwlim = 35
     backlim = -10
     leftlim = -15
     rightlim = 15
     
     
-    stp = step or 100
-    if (do3d):
-        ax4 = f2.add_subplot(326,projection='3d')
-    else:
-        ax4 = f2.add_subplot(326)
-    ax4.cla()    
         #ax1_3d.axis([leftlim,rightlim,backlim,fwlim])
 
     ax1.cla()
+    ax2.cla()    
+    ax3.cla()    
+    ax4.cla()    
     ax1.axis([leftlim,rightlim,backlim,fwlim])
     
-    v = dataset.velo[pnt][::-1]
 
     #invertered x-axis!!
     left = v[:,1] < -leftlim
@@ -46,7 +42,6 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
 
 
     #without fw limit
-    idx0 = idx_all[(v[:,0] > 4) & (v[:,1] > -10) & (v[:,1] < 10) & (v[:,2] > -2.5)]
     
 
     high = high & fw;
@@ -97,13 +92,9 @@ def plot_velo(pnt,step=100, thr = 3, do3d = False):
         
         #ax4.imshow(dataset.gray[pnt].left,cmap='gray')
     
-    if (hasattr(dataset,'rgb')):
-        img = dataset.rgb[pnt].left
-        ax2.imshow(img)
-        ax3.imshow(dataset.rgb[pnt].right)
-    elif (hasattr(dataset,'gray')):
-        ax2.imshow(dataset.gray[pnt].left,cmap='gray')
-        ax3.imshow(dataset.gray[pnt].right,cmap='gray')
+    ax2.imshow(img)
+    gt_ovly, road = overlay_mask(img,mask)
+    ax3.imshow(gt_ovly)
         
     plt.show()
-    return v[idx0], img
+    #return v[idx0], img, gt

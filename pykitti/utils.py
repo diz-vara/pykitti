@@ -59,7 +59,40 @@ def read_calib_file(filepath):
 
     return data
 
+def load_images(imL_files, **kwargs):
+    """Helper method to read stereo image pairs."""
 
+    images = []
+    for imfile in imL_files:
+        # Convert to uint8 and BGR for OpenCV if requested
+        imformat = kwargs.get('format', '')
+        if imformat is 'cv2':
+            imL = np.uint8(mpimg.imread(imfiles) * 255)
+
+            # Convert RGB to BGR
+            if len(imL.shape) > 2:
+                imL = imL[:, :, ::-1]
+
+        else:
+            imL = mpimg.imread(imfile)
+
+        images.append(imL)
+
+    return images
+    
+def load_road_masks(im_files, **kwargs):
+    """Helper method to read stereo image pairs."""
+
+    images = []
+    for imfile in im_files:
+        imL = mpimg.imread(imfile)
+
+        images.append(imL)
+
+    return images
+
+    
+    
 def load_stereo_pairs(imL_files, imR_files, **kwargs):
     """Helper method to read stereo image pairs."""
     StereoPair = namedtuple('StereoPair', 'left, right')
