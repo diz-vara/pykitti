@@ -13,7 +13,7 @@ def plot_velo(v, img, mask, thr = 3, do3d = False):
     #f2 = plt.figure()
     #ax2 = f2.add_subplot(111, projection='3d')
     fwlim = 35
-    backlim = -10
+    backlim = -20
     leftlim = -15
     rightlim = 15
     
@@ -35,7 +35,7 @@ def plot_velo(v, img, mask, thr = 3, do3d = False):
     
     
     high = v[:,2] > -thr
-    hup = v[:,2] < 1
+    hup = v[:,2] < 5
     high = high & left & right & back & hup
     numPoints = v.shape[0]
     idx_all = np.arange(0,numPoints);

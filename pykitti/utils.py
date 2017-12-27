@@ -4,7 +4,7 @@ from collections import namedtuple
 
 import matplotlib.image as mpimg
 import numpy as np
-
+import cv2
 __author__ = "Lee Clement"
 __email__ = "lee.clement@robotics.utias.utoronto.ca"
 
@@ -91,6 +91,17 @@ def load_road_masks(im_files, **kwargs):
 
     return images
 
+
+def load_road_Cmasks(im_files, **kwargs):
+    """Helper method to read stereo image pairs."""
+
+    images = []
+    for imfile in im_files:
+        imL = cv2.imread(imfile,-1)
+
+        images.append(imL)
+
+    return images
     
     
 def load_stereo_pairs(imL_files, imR_files, **kwargs):

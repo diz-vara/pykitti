@@ -284,6 +284,30 @@ class raw:
         print('done.')
 
 
+    def load_Croad(self, **kwargs):
+        """Load road masks from file.
+        Images are RGB, with:
+            (255,0,255) for road
+            (255,0,0) for not_road
+        """
+        print('Loading road masks from ' + self.drive + '...')
+
+        im_path = os.path.join(self.data_path, 'Croad', '*.png')
+
+        im_files = sorted(glob.glob(im_path))
+
+        # Subselect the chosen range of frames, if any
+        if self.frame_range:
+            im_files = [im_files[i] for i in self.frame_range]
+
+        nfiles = len(im_files)
+        print('Found ' + str(nfiles) + ' road masks...')
+
+        if (nfiles > 0):
+            self.road = utils.load_road_Cmasks(im_files, **kwargs)
+
+        print('done.')
+
     def load_rgb(self, **kwargs):
         """Load RGB stereo images from file.
 
