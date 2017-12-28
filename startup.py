@@ -13,11 +13,13 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import pykitti
 import cv2
+import numpy as np
 #%%
 basedir='F:/Datasets/kitti'
 date = '2011_09_26'
-drive = '0084'
-frame_range = None
+drive = '0106'
+base=0
+frame_range = None #range(base,base+1543)
 dataset = pykitti.raw(basedir, date, drive, frame_range)
 #dataset.load_gray()
 dataset.load_velo()
