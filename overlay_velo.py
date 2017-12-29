@@ -7,6 +7,8 @@ Created on Tue Dec 19 14:36:31 2017
 
 import scipy.misc
 import matplotlib.pyplot as plt
+import PIL.Image as Image
+
 
 
 def overlay_mask(img, gt):
@@ -25,11 +27,18 @@ def overlay_mask(img, gt):
     #street_im.paste(road_mask, box=None, mask=road_mask)
     return street_im , gt_road
         
+    
+def overlay_cs(pnt):
+    plt.imshow(dataset.rgb[pnt].left)
+    plt.imshow(Image.fromarray(colors[dataset.road[pnt]]))
+
+    
 #returns results in npoins by 4 byte array, 4th byte is for type
 # first 3 bytes - color of the point
 def overlay_velo(pnt):
     v = dataset.velo[pnt][::-1]
     img = dataset.rgb[pnt].left
+
     mask =  dataset.road[pnt]
 
 
@@ -59,15 +68,36 @@ def overlay_velo(pnt):
 
 
     #results array, 4th byte is for type
-    colors = np.zeros((npoints,4),dtype=np.uint8)
+    cmask = colors[mask]
+    colored = np.zeros((npoints,4),dtype=np.uint8)
+    
 
     for i in range(len(idx_inside)):
         p = v_inside[i];
         ii = idx_inside[i];
-        colors[ii,0:3] = (img[p[1],p[0]]*255).astype(np.uint8);
-        colors[ii,3] = mask[p[1],p[0]];
+        colored[ii,:] = (cmask[p[1],p[0]])
+        colored[ii,3] = mask[p[1],p[0]];
 
-    return v,colors
+    '''
+    ax1.scatter(v[idx_inside, 1]*(-1),
+                v[idx_inside, 0],
+                c=(colored[idx_inside]).astype(np.float32)/255, 
+                marker=',',
+                edgecolors='face',
+                s=40, alpha = 0.4);
+    '''
+    
+
+    
+    ax.cla()
+    ax.scatter(v_proj[inside,0], v_proj[inside,1], 
+                c=colored[idx_inside,:3]/255, 
+                vmax = -1.23, vmin = -1.73,
+                marker = '.', edgecolors='face',
+                s = 30, alpha = 0.4)
+    ax.imshow(street_im)    
+
+    return v,colored
     
     
     

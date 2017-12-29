@@ -14,10 +14,15 @@ from mpl_toolkits.mplot3d import Axes3D
 import pykitti
 import cv2
 import numpy as np
+import labels
+
+alfa = (127,)
+colors = np.array([label.color + alfa for label in labels.labels]).astype(np.uint8)
+
 #%%
 basedir='F:/Datasets/kitti'
-date = '2011_09_26'
-drive = '0106'
+date = '2011_10_03'
+drive = '0042'
 base=0
 frame_range = None #range(base,base+1543)
 dataset = pykitti.raw(basedir, date, drive, frame_range)
