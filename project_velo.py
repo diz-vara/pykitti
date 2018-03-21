@@ -15,11 +15,11 @@ def prepare_velo_points(pts3d_raw):
     idx_all = np.arange(0,numPoints);
 
 
-    idx0 = idx_all[(pts3d[:,0] > 0) & (pts3d[:,1] > -30) & (pts3d[:,1] < 30) 
+    idx0 = idx_all[(pts3d[:,0] > 0) & (pts3d[:,1] > -50) & (pts3d[:,1] < 50) 
                     & (pts3d[:,2] > -2.5)]    
 
     pts3d = pts3d[idx0,:]
-    pts3d[:,3] = 0
+    #pts3d[:,3] = 0
     return pts3d.transpose(), idx0
 
 def project_velo_points_in_img(pts3d, T_cam_velo, Rrect, Prect):

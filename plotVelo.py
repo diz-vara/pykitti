@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 
 
 
-def plot_velo(v, img, mask, thr = 3, do3d = False):
+def plot_velo(v, img, mask = None, thr = 3, do3d = False):
     #f2 = plt.figure()
     #ax2 = f2.add_subplot(111, projection='3d')
-    fwlim = 35
-    backlim = -20
-    leftlim = -15
-    rightlim = 15
+    fwlim = 4 #35
+    backlim = 1 #-20
+    leftlim = -3 #-15
+    rightlim = 3 #15
     
     
         #ax1_3d.axis([leftlim,rightlim,backlim,fwlim])
@@ -24,7 +24,8 @@ def plot_velo(v, img, mask, thr = 3, do3d = False):
     ax2.cla()    
     ax3.cla()    
     ax4.cla()    
-    ax1.axis([leftlim,rightlim,backlim,fwlim])
+    #ax1.axis([leftlim,rightlim,backlim,fwlim])
+    ax1.axis([-1.5,1.5,1,4])
     
 
     #invertered x-axis!!
@@ -48,10 +49,11 @@ def plot_velo(v, img, mask, thr = 3, do3d = False):
     idx = idx_all[high]
 
 
+    
     ax1.scatter(v[idx, 1]*(-1),
-                v[idx, 0],
+                v[idx, 0], v[idx,2],
                 #dataset.velo[pnt][h, 2],
-                c=v[idx, 2]*50,
+                c=v[idx, 3],
                 cmap='jet',
                 marker='.',
                 edgecolors='face')
@@ -93,8 +95,16 @@ def plot_velo(v, img, mask, thr = 3, do3d = False):
         #ax4.imshow(dataset.gray[pnt].left,cmap='gray')
     
     ax2.imshow(img)
-    gt_ovly, road = overlay_mask(img,mask)
-    ax3.imshow(gt_ovly)
+    if (mask):
+        gt_ovly, road = overlay_mask(img,mask)
+        ax3.imshow(gt_ovly)
         
     plt.show()
     #return v[idx0], img, gt
+    
+#%%
+def plot_velo_n(num,diff=0):
+    v = dataset.velo[num+diff][::-1]
+    img = dataset.rgb[num]
+    plot_velo(v,img,None, 6,True)
+    
