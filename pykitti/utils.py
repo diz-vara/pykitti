@@ -129,6 +129,28 @@ def load_stereo_pairs(imL_files, imR_files, **kwargs):
 
     return impairs
 
+    
+def load_images(imL_files, **kwargs):
+    """Helper method to read images """
+
+    images = []
+    for imfile in imL_files:
+        # Convert to uint8 and BGR for OpenCV if requested
+        imformat = kwargs.get('format', '')
+        if imformat is 'cv2':
+            imL = np.uint8(mpimg.imread(imfile) * 255)
+
+            # Convert RGB to BGR
+            if len(imL.shape) > 2:
+                imL = imL[:, :, ::-1]
+
+        else:
+            imL = mpimg.imread(imfile)
+
+        images.append(imL)
+
+    return images
+    
 
 def load_velo_scans(velo_files):
     """Helper method to parse velodyne binary files into a list of scans."""

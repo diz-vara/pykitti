@@ -317,19 +317,19 @@ class raw:
         print('Loading color images from ' + self.drive + '...')
 
         imL_path = os.path.join(self.data_path, 'image_02', 'data', '*.png')
-        imR_path = os.path.join(self.data_path, 'image_03', 'data', '*.png')
+        #imR_path = os.path.join(self.data_path, 'image_03', 'data', '*.png')
 
         imL_files = sorted(glob.glob(imL_path))
-        imR_files = sorted(glob.glob(imR_path))
+        #imR_files = sorted(glob.glob(imR_path))
 
         # Subselect the chosen range of frames, if any
         if self.frame_range:
             imL_files = [imL_files[i] for i in self.frame_range]
-            imR_files = [imR_files[i] for i in self.frame_range]
+            #imR_files = [imR_files[i] for i in self.frame_range]
 
         print('Found ' + str(len(imL_files)) + ' image pairs...')
 
-        self.rgb = utils.load_stereo_pairs(imL_files, imR_files, **kwargs)
+        self.rgb = utils.load_images(imL_files, **kwargs)
 
         print('done.')
 
