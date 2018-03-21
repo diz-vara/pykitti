@@ -9,6 +9,17 @@ import scipy.misc
 import matplotlib.pyplot as plt
 import PIL.Image as Image
 
+def threshold_image(image, thresh=25, kernel = 25):
+    
+    red_channel = image[:,:,0];
+   
+    blurred = cv2.medianBlur(red_channel,kernel);
+    diff = cv2.subtract(red_channel, blurred)
+    thr = cv2.threshold(diff, thresh, 255, cv2.THRESH_BINARY)[1];
+    out = cv2.medianBlur(thr,3)
+    #out = cv2.morphologyEx(out, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))
+
+    return out
 
 
 def overlay_mask(img, gt):
@@ -35,12 +46,21 @@ def overlay_cs(pnt):
     
 #returns results in npoins by 4 byte array, 4th byte is for type
 # first 3 bytes - color of the point
-def overlay_velo(pnt):
+def overlay_velo(pnt, marks = True):
     v = dataset.velo[pnt][::-1]
     img = dataset.rgb[pnt].left
-
-    mask =  dataset.road[pnt]
-
+    img_u8 = (img*255).astype(np.uint8)
+    
+    
+    mask =  dataset.road[pnt].copy()
+    #mask = cv2.medianBlur(mask,3)
+    
+    img_u8 = cv2.medianBlur(img_u8,7)
+    thr = threshold_image(img_u8,27)
+    
+    #road marking - 20 (traffic sign) - was type 65
+    if (marks):
+        mask[mask==7 & thr] = 65
 
     npoints = len(v)
     street_im, gt_road = overlay_mask(img,mask)
@@ -68,15 +88,22 @@ def overlay_velo(pnt):
 
 
     #results array, 4th byte is for type
-    cmask = colors[mask]
+    #cmask = colors[mask]
     colored = np.zeros((npoints,4),dtype=np.uint8)
     
 
     for i in range(len(idx_inside)):
         p = v_inside[i];
         ii = idx_inside[i];
-        colored[ii,:] = (cmask[p[1],p[0]])
-        colored[ii,3] = mask[p[1],p[0]];
+        colored[ii,:3] = img_u8[p[1],p[0]]; #(cmask[p[1],p[0]])
+        voxel_class = mask[p[1],p[0]];
+        '''if (voxel_class == 65): 
+            if (v[ii,3] < 0.25):
+                voxel_class = 7;
+            else:
+                voxel_class = 20;
+        '''        
+        colored[ii,3] = voxel_class;
 
     '''
     ax1.scatter(v[idx_inside, 1]*(-1),
@@ -89,13 +116,14 @@ def overlay_velo(pnt):
     
 
     
-    ax.cla()
-    ax.scatter(v_proj[inside,0], v_proj[inside,1], 
-                c=colored[idx_inside,:3]/255, 
-                vmax = -1.23, vmin = -1.73,
-                marker = '.', edgecolors='face',
-                s = 30, alpha = 0.4)
-    ax.imshow(street_im)    
+    if ('ax' in globals() and ax is not None):
+        ax.cla()
+        ax.scatter(v_proj[inside,0], v_proj[inside,1], 
+                    c=colored[idx_inside,:3]/255, 
+                    vmax = -1.23, vmin = -1.73,
+                    marker = '.', edgecolors='face',
+                    s = 30, alpha = 0.4)
+        #ax.imshow(street_im)    
 
     return v,colored
     
