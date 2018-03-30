@@ -152,6 +152,57 @@ class raw:
 
         print('done.')
 
+    def load_velo_timestamps(self):
+        """Load timestamps from file."""
+        print('Loading Velodyne timestamps from ' + self.drive + '...')
+
+        timestamp_file = os.path.join(
+            self.data_path, 'velodyne_points', 'timestamps.txt')
+
+        # Read and parse the timestamps
+        self.timestamps_v = []
+        with open(timestamp_file, 'r') as f:
+            for line in f.readlines():
+                # NB: datetime only supports microseconds, but KITTI timestamps
+                # give nanoseconds, so need to truncate last 4 characters to
+                # get rid of \n (counts as 1) and extra 3 digits
+                t = dt.datetime.strptime(line[:-4], '%Y-%m-%d %H:%M:%S.%f')
+                self.timestamps_v.append(t)
+
+        # Subselect the chosen range of frames, if any
+        if self.frame_range:
+            self.timestamps_v = [self.timestamps_v[i] for i in self.frame_range]
+
+        print('Found ' + str(len(self.timestamps_v)) + ' timestamps...')
+
+        print('done.')
+
+        
+    def load_image_timestamps(self):
+        """Load timestamps from file."""
+        print('Loading Image timestamps from ' + self.drive + '...')
+
+        timestamp_file = os.path.join(
+            self.data_path, 'image_02', 'timestamps.txt')
+
+        # Read and parse the timestamps
+        self.timestamps_i = []
+        with open(timestamp_file, 'r') as f:
+            for line in f.readlines():
+                # NB: datetime only supports microseconds, but KITTI timestamps
+                # give nanoseconds, so need to truncate last 4 characters to
+                # get rid of \n (counts as 1) and extra 3 digits
+                t = dt.datetime.strptime(line[:-4], '%Y-%m-%d %H:%M:%S.%f')
+                self.timestamps_i.append(t)
+
+        # Subselect the chosen range of frames, if any
+        if self.frame_range:
+            self.timestamps_i = [self.timestamps_i[i] for i in self.frame_range]
+
+        print('Found ' + str(len(self.timestamps_i)) + ' timestamps...')
+
+        print('done.')
+        
     def _poses_from_oxts(self, oxts_packets):
         """Helper method to compute SE(3) pose matrices from OXTS packets."""
         er = 6378137.  # earth radius (approx.) in meters
