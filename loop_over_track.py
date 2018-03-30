@@ -13,10 +13,12 @@ import pykitti
 import cv2
 import labels
 
+os.chdir('D:/Work/KITTI/pykitti')
+
 #%%
 basedir='F:/Datasets/kitti'
-date = '2011_09_26'
-drive = '0051'
+date = '2011_10_03'
+drive = '0027'
 Marks = True
 base=0
 frame_range = None; #range(base,4544) #None; #range(base,base+2000)#total 4544
@@ -40,12 +42,12 @@ try:
 except:
     pass
 
-npoints = len(dataset.velo)
+npoints = dataset.get_velo_num();
 
 for i in range(npoints):
     print (dataset.drive,i,'from',npoints)
     filename = "{:010d}.velorgbTcs".format(i+base)
     filepath = os.path.join(veloTdir,filename)
-    v,c = overlay_velo(i, Marks)
+    v,c = pykitti.overlay_velo(dataset,i, Marks)
 
-    save_velo_color(v,c,filepath)
+    pykitti. save_velo_color(v,c,filepath)

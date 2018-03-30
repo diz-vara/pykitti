@@ -8,6 +8,9 @@ Created on Tue Dec 19 14:36:31 2017
 import scipy.misc
 import matplotlib.pyplot as plt
 import PIL.Image as Image
+import numpy as np
+import cv2
+import pykitti
 
 def threshold_image(image, thresh=25, kernel = 25):
     
@@ -46,10 +49,16 @@ def overlay_cs(pnt):
     
 #returns results in npoins by 4 byte array, 4th byte is for type
 # first 3 bytes - color of the point
-def overlay_velo(pnt, marks = True):
+def overlay_velo(dataset, pnt, marks = True):
+    Prect = dataset.calib.P_rect_20;
+    Rrect = dataset.calib.R_rect_20;
+    T_cam_velo = dataset.calib.T_cam2_velo;
+
+
     v = dataset.velo(pnt)[::-1]
     img = dataset.rgb(pnt)
     img_u8 = (img*255).astype(np.uint8)
+    
     
     
     mask =  dataset.road(pnt).copy()
@@ -65,8 +74,8 @@ def overlay_velo(pnt, marks = True):
     npoints = len(v)
     street_im, gt_road = overlay_mask(img,mask)
 
-    v_prep, idx = prepare_velo_points(v)
-    v_proj = project_velo_points_in_img(v_prep, T_cam_velo, 
+    v_prep, idx = pykitti.prepare_velo_points(v)
+    v_proj = pykitti.project_velo_points_in_img(v_prep, T_cam_velo, 
                                         Rrect, Prect)
     
 
