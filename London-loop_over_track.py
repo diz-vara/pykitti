@@ -78,7 +78,7 @@ runfile('London_overlay_velo.py')
 
 for i in range(npoints):
     print (dataset.drive,i,'from',npoints)
-    filename = "{:010d}.velorgbTcs".format(i+base)
+    filename = "{:010d}.velorgbTcs".format(i)
     filepath = os.path.join(veloTdir,filename)
     v,c = London_overlay_velo(i, calibration, Marks)
 

@@ -48,7 +48,7 @@ def London_overlay_velo(pnt, calibration, marks = False):
     img_u8 = cv2.cvtColor(img_u8, cv2.COLOR_RGB2RGBA)
 
 
-    if ('road' in dataset.__dict__.keys()):
+    if (dataset.get_road_num() > image_idx ):
         road_cs = _diz2cs[dataset.road(image_idx)]    
         img_u8[:,:,3] =  road_cs;
         

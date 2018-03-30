@@ -9,6 +9,7 @@ import numpy as np
 
 import pykitti.utils as utils
 import matplotlib.image as mpimg
+import cv2
 
 
 __author__ = "Lee Clement"
@@ -417,7 +418,7 @@ class raw:
         
     def road(self,num):
         if (num >= 0 and num < len(self.road_files)):
-            img = mpimg.imread(self.road_files[num])
+            img = cv2.imread(self.road_files[num],-1)
         else:
             img = None
         return img
