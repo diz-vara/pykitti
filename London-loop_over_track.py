@@ -45,7 +45,6 @@ basedir='E:/Data/Voxels'
 date = '2018_03_08'
 drive = '0022'
 Marks = False
-base=0
 frame_range = None; #range(base,4544) #None; #range(base,base+2000)#total 4544
 dataset = pykitti.raw(basedir, date, drive, frame_range)
 #dataset.load_gray()
@@ -72,7 +71,7 @@ try:
 except:
     pass
 
-npoints = len(dataset.velo)
+npoints = dataset.get_velo_num()
 
 runfile('London_overlay_velo.py')
 

@@ -38,18 +38,18 @@ _diz2cs = np.array([
 
 def London_overlay_velo(pnt, calibration, marks = False):
     
-    v = dataset.velo[pnt][::-1]
+    v = dataset.velo(pnt)[::-1]
     ts = dataset.timestamps_v[pnt]
     
     image_idx = np.nonzero(ts_i>ts)[0][0]+2
 
-    img = dataset.rgb[image_idx]
+    img = dataset.rgb(image_idx)
     img_u8 = (img*255).astype(np.uint8)
     img_u8 = cv2.cvtColor(img_u8, cv2.COLOR_RGB2RGBA)
 
 
     if ('road' in dataset.__dict__.keys()):
-        road_cs = _diz2cs[dataset.road[image_idx]]    
+        road_cs = _diz2cs[dataset.road(image_idx)]    
         img_u8[:,:,3] =  road_cs;
         
   

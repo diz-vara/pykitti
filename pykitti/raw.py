@@ -8,6 +8,8 @@ from collections import namedtuple
 import numpy as np
 
 import pykitti.utils as utils
+import matplotlib.image as mpimg
+
 
 __author__ = "Lee Clement"
 __email__ = "lee.clement@robotics.utias.utoronto.ca"
@@ -354,8 +356,10 @@ class raw:
         nfiles = len(im_files)
         print('Found ' + str(nfiles) + ' road masks...')
 
-        if (nfiles > 0):
-            self.road = utils.load_road_Cmasks(im_files, **kwargs)
+        self.road_files = im_files
+        
+        #if (nfiles > 0):
+        #    self.road = utils.load_road_Cmasks(im_files, **kwargs)
 
         print('done.')
 
@@ -380,7 +384,8 @@ class raw:
 
         print('Found ' + str(len(imL_files)) + ' image pairs...')
 
-        self.rgb = utils.load_images(imL_files, **kwargs)
+        self.rgb_files = imL_files;
+        #self.rgb = utils.load_images(imL_files, **kwargs)
 
         print('done.')
 
@@ -398,6 +403,48 @@ class raw:
         print('Found ' + str(len(velo_files)) + ' Velodyne scans...')
 
         # Read the Velodyne scans. Each point is [x,y,z,reflectance]
-        self.velo = utils.load_velo_scans(velo_files)
+        self.velo_files = velo_files;
+        #self.velo = utils.load_velo_scans(velo_files)
 
         print('done.')
+        
+    def rgb(self,num):
+        if (num >= 0 and num < len(self.rgb_files)):
+            img = mpimg.imread(self.rgb_files[num])
+        else:
+            img = None
+        return img
+        
+    def road(self,num):
+        if (num >= 0 and num < len(self.road_files)):
+            img = mpimg.imread(self.road_files[num])
+        else:
+            img = None
+        return img
+                
+    def velo(self,num):
+        if (num >= 0 and num < len(self.velo_files)):
+            scan = np.fromfile(self.velo_files[num], dtype=np.float32)
+            scan = scan.reshape((-1, 4))
+        else:
+            scan = None
+        return scan
+        
+    def get_rgb_num(self):
+        if ('rgb_files' in self.__dict__.keys()):
+            return len(self.rgb_files)
+        else:
+            return 0
+        
+    def get_road_num(self):
+        if ('road_files' in self.__dict__.keys()):
+            return len(self.road_files)
+        else:
+            return 0
+
+    def get_velo_num(self):
+        if ('velo_files' in self.__dict__.keys()):
+            return len(self.velo_files)        
+        else:
+            return 0
+            
