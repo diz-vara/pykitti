@@ -6,13 +6,14 @@ Created on Wed Dec 20 17:30:34 2017
 """
 
 import struct
+import numpy as np
 
-def save_velo_color(v, color, name):
-    buff = np.zeros(v.shape[0]*v.shape[1]*4,np.uint8)
-    npoints = v.shape[0]
+def save_velo_color(cloud, colors, name ):
+    buff = np.zeros(cloud.shape[0]*cloud.shape[1]*4,np.uint8)
+    npoints = cloud.shape[0]
     
-    ci=color[::-1]
-    vi=v[::-1]
+    ci=colors[::-1]
+    vi=cloud[::-1]
     for i in range(npoints):
         p = vi[i,:]
         c = ci[i,:]
