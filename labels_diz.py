@@ -74,12 +74,7 @@ labels_diz = [
 colors_diz = np.array([label.color for label in labels_diz]).astype(np.uint8)
 
 #%%
-
-def xu2diz(base_dir, in_dir, out_dir):
-    _xu2diz = np.array([0, 1, 2, 3, 3, 4, 5, 6, 7, 7, 8 ,9, 10, 11, 12, 10, 10, 
-          13, 13, 13, 13, 14, 14, 15, 16, 15, 16, 17, 18]).astype(np.uint8)
-    
-
+def reCode (base_dir, in_dir, out_dir, table):
     in_dir = os.path.join(base_dir, in_dir)
     out_dir = os.path.join(base_dir, out_dir)
 
@@ -104,11 +99,46 @@ def xu2diz(base_dir, in_dir, out_dir):
         print(str(cnt) + end_string)
         cnt = cnt+1
         label_in = cv2.imread(os.path.join(in_dir, label_file),-1)
-        label_out = _xu2diz[label_in]
+        if (len(label_in.shape) > 2):   #from multi-channel labels (synthia)
+            label_in = label_in[:,:,-1] #take only last channel
+        label_in[label_in >= len(table) ] = 0
+        label_out = table[label_in]
         cv2.imwrite(os.path.join(out_dir, label_file), label_out)
+
+#%%
+
+
+def xu2diz(base_dir, in_dir, out_dir):
+    _xu2diz = np.array([0, 1, 2, 3, 3, 4, 5, 6, 7, 7, 8 ,9, 10, 11, 12, 10, 10, 
+          13, 13, 13, 13, 14, 14, 15, 16, 15, 16, 17, 18]).astype(np.uint8)
+    
+    reCode(base_dir, in_dir,out_dir, _xu2diz);
+
     
     
+#%%
+def synthia2diz(base_dir, in_dir, out_dir):
+    syn2diz = np.array([
+                        10, #void -> construction
+                        1, #sky
+                        8, #building
+                        2, #road
+                        3, #sidewalk
+                        10, #Fence -> construction
+                        7, #vegetation
+                        10, #pole -> construction
+                        13, #car->transport
+                        11, #sign
+                        14, #pedestrian
+                        16, #bicycle
+                        4, #lanemarking
+                        0,
+                        0,
+                        12 #traffic light
+                        ]).astype(np.uint8)
     
+    reCode(base_dir, in_dir,out_dir, syn2diz);
+
 #%%
 def colors2label(base_dir, in_dir, out_dir, colors):
     
@@ -166,7 +196,7 @@ def diz2cityScapes(base_dir, in_dir, out_dir):
                        22,   #terrain
                        21,   #vegetaion
                        11,   #building
-                       15,   #--birdge
+                       15,   #--bridge
                        14,   #construction (guard rail)
                        20,   #sign
                        19,  #traffick light
