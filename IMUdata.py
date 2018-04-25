@@ -73,11 +73,21 @@ def read_IMUfile(filename):
      
 def extract_position(IMUdata):
     bFix = np.array([d['bFix'] for d in IMUdata])==1;
+    bImu = np.array([d['bIMU'] for d in IMUdata])==1;
+    bFix = bFix & bImu;                
     Lat = np.array([d['Lat'] for d in IMUdata[bFix]]);
     Lon = np.array([d['Lon'] for d in IMUdata[bFix]]);
     Alt = np.array([d['Alt'] for d in IMUdata[bFix]]);
     return Lat,Lon,Alt
     
+def extract_linax(IMUdata):
+    bFix = np.array([d['bFix'] for d in IMUdata])==1;
+    bImu = np.array([d['bIMU'] for d in IMUdata])==1;
+    bFix = bFix & bImu;                
+    Lat = np.array([d['Lat'] for d in IMUdata[bFix]]);
+    Lon = np.array([d['Lon'] for d in IMUdata[bFix]]);
+    Alt = np.array([d['Alt'] for d in IMUdata[bFix]]);
+    return Lat,Lon,Alt
 
     
 
