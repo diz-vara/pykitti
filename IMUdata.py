@@ -78,30 +78,30 @@ def read_IMUfile(filename):
      
 def extract_position(IMUdata):
     bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
-    Pos = [(d['Lat'], d['Lon'], d['Alt']) for d in IMUdata[bFix]];
+    Pos = [(d['Lat'], d['Lon'], d['Alt']) for d in np.array(IMUdata)[bFix]];
     return np.array(Pos)
     
 def extract_linacc(IMUdata):
     bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
-    acc = [(d['LAx'], d['LAy'], d['LAz']) for d in IMUdata[bFix]];
+    acc = [(d['LAx'], d['LAy'], d['LAz']) for d in np.array(IMUdata)[bFix]];
                   
     return np.array( acc )
     
 def extract_quaternion(IMUdata):
     bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
-    Q = [Quaternion(d['Qw'], d['Qx'], d['Qy'], d['Qz']) for d in IMUdata[bFix]]
+    Q = [Quaternion(d['Qw'], d['Qx'], d['Qy'], d['Qz']) for d in np.array(IMUdata)[bFix]]
     return np.array( Q )
     
 def extract_ts(IMUdata):
     bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
-    ts = np.array([(d['ts_s'],d['ts_ns']) for d in IMUdata[bFix]]);
+    ts = np.array([(d['ts_s'],d['ts_ns']) for d in np.array(IMUdata)[bFix]]);
     return np.array( ts )
 
 #only linear - there were no angle velocities :(    
 def extract_twist(IMUdata):
     bTwist = np.array([d['bTwist']==1 for d in IMUdata]);
 
-    twL = [(d['TwLx'],d['TwLy'],d['TwLz']) for d in IMUdata[bTwist]];
+    twL = [(d['TwLx'],d['TwLy'],d['TwLz']) for d in np.array(IMUdata)[bTwist]];
     return np.array(twL)
     
     
@@ -111,22 +111,28 @@ def quaternion_to_euler_angle(w, x, y, z):
 	
 	t0 = +2.0 * (w * x + y * z)
 	t1 = +1.0 - 2.0 * (x * x + ysqr)
-	X = math.degrees(math.atan2(t0, t1))
+	X = math.atan2(t0, t1)
 	
 	t2 = +2.0 * (w * y - z * x)
 	t2 = +1.0 if t2 > +1.0 else t2
 	t2 = -1.0 if t2 < -1.0 else t2
-	Y = math.degrees(math.asin(t2))
+	Y = math.asin(t2)
 	
 	t3 = +2.0 * (w * z + x * y)
 	t4 = +1.0 - 2.0 * (ysqr + z * z)
-	Z = math.degrees(math.atan2(t3, t4))
+	Z = math.atan2(t3, t4)
 	
 	return (X, Y, Z)
     
 
 def extract_euler(IMUdata):
     bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
-    e = [quaternion_to_euler_angle(d['Qw'], d['Qx'], d['Qy'], d['Qz']) for d in IMUdata[bFix]]
+    e = [quaternion_to_euler_angle(d['Qw'], d['Qx'], d['Qy'], d['Qz']) for d in np.array(IMUdata)[bFix]]
     return np.array( e )
      
+def extract_yaw_pitch_roll(IMUdata):
+    q = extract_quaternion(IMUdata);
+    ypr = [q0.yaw_pitch_roll for q0 in q]
+    return np.array( ypr )
+    
+    
