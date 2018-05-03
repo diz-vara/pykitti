@@ -18,78 +18,94 @@ import traceback
 import numpy as np
 from multiprocessing import Process, Queue, Pool
 
-import logging
-import logging.config
 
 import VLP16defs
 
+#%%
+def read_ts(file):
+    ts = []
+    with open(file, 'rt') as ts_f:
+        for line in ts_f:
+            t = line.split()[0].split('.')
+            ts_s = int(t[0])
+            ts_ns = int(t[1])
+            ts.append( (ts_s, ts_ns))
+    return np.array(ts)
 
-formatter = '[%(asctime)s][%(filename)s:%(lineno)s][%(levelname)s][%(message)s]'
-
-LOGGING_CONFIG = {
-    'version': 1,
-    'disable_existing_loggers': False,  # this fixes the problem
-
-    'formatters': {
-        'standard': {
-            'format': formatter,
-        },
-    },
-    'handlers': {
-        'default': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard'
-        },
-        "debug_file_handler": {
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "standard",
-            "filename": "./logs/lidar.log",
-            "when": "D",
-            "interval": 1,
-            "backupCount": 30,
-            "encoding": "utf8"
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ["default", 'debug_file_handler'],
-            'level': 'DEBUG',
-            'propagate': False
-        },
-    }
-}
-
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("")
 
 #%%
-def read_velo_file(file):
-    ns = 0;
+def correct_ts(ts):
+    if (ts[1] > 1000000000 ):
+        ts[1] -= 1000000000;
+        ts[0] += 1
+    return ts
 
-    with open(file, 'rb') as vf:
+point_keys = ['az', 'dist', 'intensity', 'omega', 'ts']    
+    
+def read_velo_file(path):
+    
+    packet_cnt = 0;
+    ts_file = os.path.join(path,'timestampsU.txt')
+    time_stamps = read_ts(ts_file)
+    
+    v_file = os.path.join(path, 'velodyne.bin')
+    points = []
+    
+    with open(v_file, 'rb') as vf:
+        d_az = 0.41111;  #default az step    
+        old_az = -1;
+
         while (1):
             #scan = np.fromfile(vf, dtype=np.uint8, count=PACKET_SIZE);
             scan = vf.read(PACKET_SIZE);
-            ns = ns + 1
             if (len(scan) < PACKET_SIZE ):
                 break;
-                
+            
+            firing_ts = time_stamps[packet_cnt]
+
             for block in range(BLOCKS_PER_PACKET):
                 offset = block * SIZE_BLOCK;
                 head=struct.unpack_from('<HH',scan, offset)     
-                #print("AZ = {:f}".format(head[1]/100.) )
                 az = head[1]/100.;
-                #todo - intrpolate az!!!
-                for fire in range VLP16_FIRINGS_PER_BLOCK:
-                    for laser in range VLP16_SCANS_PER_FIRING:
+                print("AZ = {:f}, dAZ = {:f}".format(az,d_az) )
+                #todo - interpolate az!!!
+                offset += 4;
+                if (old_az >= 0):
+                    d_az = az-old_az;
+                old_az = az;
+                dd_az = d_az/VLP16_BLOCK_TDURATION * VLP16_DSR_TOFFSET;
                 
-            tail=struct.unpack_from('<IH', scan, 1200)
+                for fire in range(VLP16_FIRINGS_PER_BLOCK):
+                    arr = struct.unpack_from('<'+'HB'*VLP16_SCANS_PER_FIRING,
+                                             scan,offset);
+                    #print(arr)
+                    point_az = az;
+                    point_ts = firing_ts.copy();
+                    for  laser_id in range (VLP16_SCANS_PER_FIRING):
+                        distance = arr[laser_id*2] * DISTANCE_RESOLUTION;
+                        intensity = arr[laser_id*2+1];
+                        point_az += dd_az;
+                        if (point_az > 360):
+                            point_az -= 360;
+                        omega = LASER_ANGLES[laser_id] * np.pi / 180.0
+                        point_ts[1] += VLP16_DSR_TOFFSET_NS;
+                        point_ts = correct_ts(point_ts)
+                        point = dict(zip(point_keys,(point_az, distance, 
+                                                     intensity, omega, point_ts.copy())))
+                        points.append(point)
+                        
+                    offset = offset + VLP16_SCANS_PER_FIRING*RAW_SCAN_SIZE;
+                    az += d_az/2;
+                    if (az > 360):
+                        az -= 360;
+                    firing_ts[1] += VLP16_FIRING_TOFFSET_NS
+                    firing_ts = correct_ts(firing_ts);
+
+            tail=struct.unpack_from('<IH', scan, offset)
             print("{:d} {:X}".
                   format(tail[0], tail[1]))
-            ret = scan
-    return ret,ns        
+            packet_cnt = packet_cnt + 1
+    return points, packet_cnt        
             
     
 #%%

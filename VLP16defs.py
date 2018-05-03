@@ -40,3 +40,7 @@ VLP16_SCANS_PER_FIRING  =  16;
 VLP16_BLOCK_TDURATION   = 110.592;   #// [µs]
 VLP16_DSR_TOFFSET       =   2.304;   #// [µs]
 VLP16_FIRING_TOFFSET    =  55.296;   #// [µs]
+
+VLP16_BLOCK_TDURATION_NS   = 110592;   #// [ns]
+VLP16_DSR_TOFFSET_NS       =   2304;   #// [ns]
+VLP16_FIRING_TOFFSET_NS    =  55296;   #// [ns]
