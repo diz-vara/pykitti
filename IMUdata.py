@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from pyquaternion import Quaternion
 import math
 
+import navpy
+
 
 def unpack_IMUdata(data):
     keys = [
@@ -136,3 +138,14 @@ def extract_yaw_pitch_roll(IMUdata):
     return np.array( ypr )
     
     
+def lla2ecef(lla):
+    ecef = [ navpy.lla2ecef(pos[0],pos[1],pos[2]) for pos in lla];
+    return np.array(ecef);
+
+
+def lla2ned(lla, ref=None):
+    if (ref == None):
+        ref = lla[0,:];
+    ned = [ navpy.lla2ned(pos[0],pos[1],pos[2], ref[0], ref[1], ref[2]) for pos in lla];
+    return np.array(ned);
+
