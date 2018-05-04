@@ -21,7 +21,7 @@ from multiprocessing import Process, Queue, Pool
 
 import VLP16defs
 from ROS_ts import ROS_ts
-
+import copy
 
 #%%
 def read_ts(file):
@@ -94,8 +94,13 @@ def read_velo_file(path):
                         omega = LASER_ANGLES[laser_id] * np.pi / 180.0
                         point_ts += VLP16_DSR_TOFFSET_NS;
                         point = dict(zip(point_keys,(point_az, distance, 
-                                                     intensity, omega, point_ts)))
+                                                     intensity, omega, 
+                                                     copy.copy(point_ts))))
+                        #if (distance > 0):
                         points.append(point)
+                        #print(point_ts, point['ts'], points[-1]['ts'])
+                        #if (len(points)> 1):
+                        #    print(points[-2]['ts'])
                        
                     offset = offset + VLP16_SCANS_PER_FIRING*RAW_SCAN_SIZE;
                     az += d_az/2;
@@ -108,6 +113,8 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
+            #if (packet_cnt > 2):
+            #    break;
     return points, packet_cnt        
             
     
