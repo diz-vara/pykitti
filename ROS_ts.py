@@ -1,0 +1,96 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri May  4 12:08:10 2018
+
+@author: avarfolomeev
+"""
+import numpy as np
+
+
+
+class ROS_ts:
+    "ROS timestamp with UNIX epoch seconds and nanoseconds"
+    _billion = 1000000000
+    
+    def __init__(self, s=0, ns=None):
+        _type = type(s)
+        if (_type == list or _type == np.ndarray or _type == tuple):        
+            self.s = int(s[0]);
+            if ( len(s) > 1):
+                self.ns = int(s[1]);
+            else:
+                self.ns = 0;
+        else:
+            self.s = int(s)
+            if (_type == float or _type == np.float32 or _type == np.float64 ):
+                self.ns = int((s-int(s))*1000000000)
+            elif (ns is None):                
+                self.ns = int(s);
+                self.s = 0;
+            else:
+                self.ns = ns;
+        
+    def to_string(self):
+        return "{:d}.{:09d}".format(self.s, self.ns)
+        
+    def __lt__(self, right):
+        if (self.s == right.s):
+            return (self.ns < right.ns);
+        else:
+            return (self.s < right.s);
+
+    def __le__(self, right):
+        if (self.s == right.s):
+            return (self.ns <= right.ns);
+        else:
+            return (self.s < right.s);
+
+    def __eq__(self, right):
+        if (self.s == right.s):
+            return (self.ns == right.ns);
+        else:
+            return False;
+
+    def __iadd__ (self,right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
+        self.s += right.s;
+        self.ns += right.ns;
+        if (self.ns >= self._billion):
+            self.s += 1;
+            self.ns -= self._billion;
+
+    def __isub__ (self,right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
+        self.s -= right.s;
+        self.ns -= right.ns;
+        if (self.ns < 0 ):
+            self.s -= 1;
+            self.ns += self._billion;
+
+
+    def __add__ (self,right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
+        s = self.s + right.s;
+        ns = self.ns + right.ns;
+        if (ns >= self._billion):
+            s += 1;
+            ns -= self._billion;
+        return ROS_ts(s,ns)
+            
+    #todo: deal with negative numbers!!!
+    def __sub__ (self,right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
+        s= self.s - right.s;
+        ns = self.ns - right.ns;
+        if (ns < 0 ):
+            s -= 1;
+            ns += self._billion;
+        return ROS_ts(s,ns)
+                    
+    def __str__(self):
+        return "{:d}.{:09d}".format(self.s, self.ns)
+       
