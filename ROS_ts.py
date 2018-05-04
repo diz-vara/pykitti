@@ -20,6 +20,9 @@ class ROS_ts:
                 self.ns = int(s[1]);
             else:
                 self.ns = 0;
+        elif (_type == ROS_ts):
+            self.s = s.s;
+            self.ns = s.ns;
         else:
             self.s = int(s)
             if (_type == float or _type == np.float32 or _type == np.float64 ):
@@ -65,7 +68,7 @@ class ROS_ts:
             right = ROS_ts(right);
         self.s -= right.s;
         self.ns -= right.ns;
-        if (self.ns < 0 ):
+        if (self.ns < 0 and self.s > 0):
             self.s -= 1;
             self.ns += self._billion;
 
@@ -86,11 +89,27 @@ class ROS_ts:
             right = ROS_ts(right);
         s= self.s - right.s;
         ns = self.ns - right.ns;
-        if (ns < 0 ):
+        if (s < 0 and ns > 0):
+            s += 1;
+            ns -= self._billion;
+        elif (ns < 0 and s > 0):
             s -= 1;
             ns += self._billion;
         return ROS_ts(s,ns)
                     
     def __str__(self):
-        return "{:d}.{:09d}".format(self.s, self.ns)
-       
+        ns = self.ns;
+        sign = '';
+        if (self.s == 0 and ns < 0):
+            sign = '-';
+            ns = -ns;
+        return "{:s}{:d}.{:09d}".format(sign,self.s, ns)
+
+    def __repr__(self):
+        ns = self.ns;
+        sign = '';
+        if (self.s == 0 and ns < 0):
+            sign = '-';
+            ns = -ns;
+        return "({:s}{:d}.{:09d})".format(sign,self.s, ns)
+        
