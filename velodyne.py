@@ -20,6 +20,8 @@ from multiprocessing import Process, Queue, Pool
 
 
 import VLP16defs
+from ROS_ts import ROS_ts
+
 
 #%%
 def read_ts(file):
@@ -29,16 +31,11 @@ def read_ts(file):
             t = line.split()[0].split('.')
             ts_s = int(t[0])
             ts_ns = int(t[1])
-            ts.append( (ts_s, ts_ns))
+            ts.append( ROS_ts(ts_s, ts_ns))
     return np.array(ts)
 
 
 #%%
-def correct_ts(ts):
-    if (ts[1] > 1000000000 ):
-        ts[1] -= 1000000000;
-        ts[0] += 1
-    return ts
 
 point_keys = ['az', 'dist', 'intensity', 'omega', 'ts']    
     
@@ -51,6 +48,7 @@ def read_velo_file(path):
     v_file = os.path.join(path, 'velodyne.bin')
     points = []
     
+    base_ts = ROS_ts(0)
     with open(v_file, 'rb') as vf:
         d_az = 0.41111;  #default az step    
         old_az = -1;
@@ -60,14 +58,20 @@ def read_velo_file(path):
             scan = vf.read(PACKET_SIZE);
             if (len(scan) < PACKET_SIZE ):
                 break;
-            
-            firing_ts = time_stamps[packet_cnt]
+
+            ts=struct.unpack_from('<I', scan, TS_OFFSET)[0]
+                
+            if (base_ts == 0):
+                base_ts = time_stamps[0] - ts * 1000;
+
+            firing_ts = base_ts + ts * 1000;
+            #print (firing_ts, time_stamps[packet_cnt], firing_ts-time_stamps[packet_cnt])
 
             for block in range(BLOCKS_PER_PACKET):
                 offset = block * SIZE_BLOCK;
                 head=struct.unpack_from('<HH',scan, offset)     
                 az = head[1]/100.;
-                print("AZ = {:f}, dAZ = {:f}".format(az,d_az) )
+                #print("AZ = {:f}, dAZ = {:f}".format(az,d_az) )
                 #todo - interpolate az!!!
                 offset += 4;
                 if (old_az >= 0):
@@ -80,7 +84,7 @@ def read_velo_file(path):
                                              scan,offset);
                     #print(arr)
                     point_az = az;
-                    point_ts = firing_ts.copy();
+                    point_ts = firing_ts;
                     for  laser_id in range (VLP16_SCANS_PER_FIRING):
                         distance = arr[laser_id*2] * DISTANCE_RESOLUTION;
                         intensity = arr[laser_id*2+1];
@@ -88,23 +92,22 @@ def read_velo_file(path):
                         if (point_az > 360):
                             point_az -= 360;
                         omega = LASER_ANGLES[laser_id] * np.pi / 180.0
-                        point_ts[1] += VLP16_DSR_TOFFSET_NS;
-                        point_ts = correct_ts(point_ts)
+                        point_ts += VLP16_DSR_TOFFSET_NS;
                         point = dict(zip(point_keys,(point_az, distance, 
-                                                     intensity, omega, point_ts.copy())))
+                                                     intensity, omega, point_ts)))
                         points.append(point)
-                        
+                       
                     offset = offset + VLP16_SCANS_PER_FIRING*RAW_SCAN_SIZE;
                     az += d_az/2;
                     if (az > 360):
                         az -= 360;
-                    firing_ts[1] += VLP16_FIRING_TOFFSET_NS
-                    firing_ts = correct_ts(firing_ts);
+                    firing_ts += VLP16_FIRING_TOFFSET_NS
 
-            tail=struct.unpack_from('<IH', scan, offset)
-            print("{:d} {:X}".
-                  format(tail[0], tail[1]))
+            #tail=struct.unpack_from('<IH', scan, offset)
+            #print("{:d} {:d} {:X}".
+            #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
+            print(packet_cnt)
     return points, packet_cnt        
             
     
@@ -154,7 +157,7 @@ def unpack(dirs):
                         try:
                             if os.path.exists(path) is False:
                                 os.makedirs(path)
-                        except Exception e:
+                        except Exception as e:
                             print (e)
                         if not points:
                             timestamp_str = '%.6f' % time.time()
@@ -173,6 +176,7 @@ def unpack(dirs):
                         if arr[i * 2] != 0:
                             points.append(calc(arr[i * 2], azimuth, i, timestamp + time_offset))
 
+#%%                            
 def save_package(dirs, data_queue):
     try:
         if os.path.exists(dirs) is False:
@@ -186,21 +190,21 @@ def save_package(dirs, data_queue):
                 msg = data_queue.get()
                 data = msg['data']
                 ts = msg['time']
-                print ts, len(data), 'queue size: ', data_queue.qsize(), cnt
+                print (ts, len(data), 'queue size: ', data_queue.qsize(), cnt)
                 if fp == None or cnt == 1000000:
                     if fp != None:
                         fp.close()
                     file_fmt = os.path.join(dirs, '%Y-%m-%d_%H%M')
                     path = str(datetime.now().strftime(file_fmt)) + '.bin'
                     logger.info('save to' + path)
-                    print 'save to ', path
+                    print ('save to ', path)
                     fp = open(path, 'ab')
                     cnt = 0
                 cnt += 1
                 fp.write('%.6f' % ts)
                 fp.write(data)
-    except KeyboardInterrupt, e:
-        print e
+    except KeyboardInterrupt as e:
+        print(e)
     finally:
         if fp != None:
             fp.close()
@@ -215,15 +219,19 @@ def capture(port, data_queue):
                 if len(data) > 0:
                     assert len(data) == 1206, len(data)
                     data_queue.put({'data': data, 'time': time.time()})
-            except Exception, e:
-                print dir(e), e.message, e.__class__.__name__
+            except Exception as e:
+                print( dir(e), e.message, e.__class__.__name__)
                 traceback.print_exc(e)
-    except KeyboardInterrupt, e:
-        print e
+    except KeyboardInterrupt as e:
+        print (e)
+
 
 if __name__ == "__main__":
+    p,n=read_velo_file('E:\\Data\\Voxels\\201804\\spb-50-0\\velodyne_packets\\')
+
+"""    
     if len(sys.argv) < 3:
-        print __doc__
+        print (__doc__)
         sys.exit(2)
     if sys.argv[1] == 'read':
         top_dir = datetime.now().strftime('%Y-%m-%d_%H%M%S')
@@ -233,3 +241,4 @@ if __name__ == "__main__":
         processB.start()
     else:
         unpack(sys.argv[2])
+"""
