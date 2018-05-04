@@ -26,29 +26,38 @@ class ROS_ts:
         else:
             self.s = int(s)
             if (_type == float or _type == np.float32 or _type == np.float64 ):
-                self.ns = int((s-int(s))*1000000000)
+                self.ns = int((s-int(s))*self._billion)
             elif (ns is None):                
                 self.ns = int(s);
                 self.s = 0;
             else:
                 self.ns = ns;
+        if (self.ns >= self._billion):
+            self.s += self.ns // self._billion;
+            self.ns = self.ns % self._billion;
         
     def to_string(self):
         return "{:d}.{:09d}".format(self.s, self.ns)
         
     def __lt__(self, right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
         if (self.s == right.s):
             return (self.ns < right.ns);
         else:
             return (self.s < right.s);
 
     def __le__(self, right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
         if (self.s == right.s):
             return (self.ns <= right.ns);
         else:
             return (self.s < right.s);
 
     def __eq__(self, right):
+        if (type(right) is not ROS_ts):
+            right = ROS_ts(right);
         if (self.s == right.s):
             return (self.ns == right.ns);
         else:
@@ -62,6 +71,7 @@ class ROS_ts:
         if (self.ns >= self._billion):
             self.s += 1;
             self.ns -= self._billion;
+        return self    
 
     def __isub__ (self,right):
         if (type(right) is not ROS_ts):
@@ -71,7 +81,7 @@ class ROS_ts:
         if (self.ns < 0 and self.s > 0):
             self.s -= 1;
             self.ns += self._billion;
-
+        return self
 
     def __add__ (self,right):
         if (type(right) is not ROS_ts):
