@@ -23,6 +23,8 @@ import VLP16defs
 from ROS_ts import ROS_ts
 import copy
 
+
+import pickle
 #%%
 def read_ts(file):
     ts = []
@@ -46,7 +48,9 @@ def read_velo_file(path):
     time_stamps = read_ts(ts_file)
     
     v_file = os.path.join(path, 'velodyne.bin')
-    points = []
+    p_file = open(os.path.join(path, 'points.p'),'wb');
+    
+    #points = []
     
     base_ts = ROS_ts(0)
     with open(v_file, 'rb') as vf:
@@ -96,8 +100,9 @@ def read_velo_file(path):
                         point = dict(zip(point_keys,(point_az, distance, 
                                                      intensity, omega, 
                                                      copy.copy(point_ts))))
-                        #if (distance > 0):
-                        points.append(point)
+                        if (distance > 0):
+                            pickle.dump(point,p_file);
+                            #points.append(point)
                         #print(point_ts, point['ts'], points[-1]['ts'])
                         #if (len(points)> 1):
                         #    print(points[-2]['ts'])
@@ -115,7 +120,8 @@ def read_velo_file(path):
             print(packet_cnt)
             #if (packet_cnt > 2):
             #    break;
-    return points, packet_cnt        
+    p_file.close();        
+    return packet_cnt        
             
     
 #%%
