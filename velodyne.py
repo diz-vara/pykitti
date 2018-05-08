@@ -23,6 +23,8 @@ import VLP16defs
 from ROS_ts import ROS_ts
 import copy
 
+from IMUdata import *
+
 
 import pickle
 #%%
@@ -48,15 +50,19 @@ def read_velo_file(path):
     time_stamps = read_ts(ts_file)
     
     v_file = os.path.join(path, 'velodyne.bin')
-    p_file = open(os.path.join(path, 'points.p'),'wb');
+    out_file = open(os.path.join(path, 'points.bin'),'wb');
+
     
-    #points = []
+    points = []
     
     base_ts = ROS_ts(0)
+    prev_ts = 0
+    corr_ts = 0
+    
     with open(v_file, 'rb') as vf:
         d_az = 0.41111;  #default az step    
         old_az = -1;
-
+        cnt = 0;
         while (1):
             #scan = np.fromfile(vf, dtype=np.uint8, count=PACKET_SIZE);
             scan = vf.read(PACKET_SIZE);
@@ -65,6 +71,21 @@ def read_velo_file(path):
 
             ts=struct.unpack_from('<I', scan, TS_OFFSET)[0]
                 
+            if (prev_ts == 0):
+                prev_ts = ts;
+                corr_ts = 0;
+                
+            #corrections for the case of GPS error 
+            # that couses extra second added 
+            ts -= corr_ts;  
+            #print(ts-prev_ts)
+            if (ts - prev_ts > 1000000):
+                ts -= 1000000;
+                corr_ts += 1000000;
+            prev_ts = ts;    
+            
+                
+            
             if (base_ts == 0):
                 base_ts = time_stamps[0] - ts * 1000;
 
@@ -88,29 +109,37 @@ def read_velo_file(path):
                                              scan,offset);
                     #print(arr)
                     point_az = az;
-                    point_ts = firing_ts;
+                    point_ts = copy.copy(firing_ts);
                     for  laser_id in range (VLP16_SCANS_PER_FIRING):
                         distance = arr[laser_id*2] * DISTANCE_RESOLUTION;
                         intensity = arr[laser_id*2+1];
                         point_az += dd_az;
-                        if (point_az > 360):
+                        if (point_az > 180):
                             point_az -= 360;
+                        if (point_az < -180):
+                            point_az += 360;
+                        point_az_rad = point_az * np.pi/180.;    
                         omega = LASER_ANGLES[laser_id] * np.pi / 180.0
-                        point_ts += VLP16_DSR_TOFFSET_NS;
-                        point = dict(zip(point_keys,(point_az, distance, 
+                        point = dict(zip(point_keys,(point_az_rad, distance, 
                                                      intensity, omega, 
-                                                     copy.copy(point_ts))))
-                        if (distance > 0):
-                            pickle.dump(point,p_file);
-                            #points.append(point)
+                                                     point_ts)))
+                        point_ts += VLP16_DSR_TOFFSET_NS;
+                        if (distance > 0 and intensity > 0):
+                            #pickle.dump(point,p_file);
+                            bf = pack(point)
+                            out_file.write(bf);
+                            cnt += 1
+                            points.append(point)
                         #print(point_ts, point['ts'], points[-1]['ts'])
                         #if (len(points)> 1):
                         #    print(points[-2]['ts'])
                        
                     offset = offset + VLP16_SCANS_PER_FIRING*RAW_SCAN_SIZE;
                     az += d_az/2;
-                    if (az > 360):
+                    if (az > 180):
                         az -= 360;
+                    if (az < -180):
+                        az += 360;
                     firing_ts += VLP16_FIRING_TOFFSET_NS
 
             #tail=struct.unpack_from('<IH', scan, offset)
@@ -118,14 +147,78 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            #if (packet_cnt > 2):
-            #    break;
-    p_file.close();        
-    return packet_cnt        
+            if (packet_cnt > 500):
+                break;
+    out_file.close();        
+    return points, packet_cnt        
             
     
 #%%
+
+struct_format = "dddiiB";
+
+def pack(p0):
+    bf=struct.pack(struct_format,p0['az'],p0['dist'],p0['omega'], #3 x double
+                   p0['ts'].s, p0['ts'].ns,           #2 x int32 
+                   p0['intensity'])                   #Byte
+    return bf    
     
+
+def unpack(bf):
+    az,dist,omega,s, ns,intensity=struct.unpack(struct_format,bf);
+    point = dict(zip(point_keys,(az, dist,
+                                 intensity, omega,
+                                 ROS_ts(s,ns))));
+    return point;
+
+#%%
+def read_points(filename,outname,IMUdata):
+    points = []
+    IMU_idx = -1
+    cnt = 1e6
+    IMU_ts = extract_ts(IMUdata)
+    pos = extract_position(IMUdata);
+    ned = lla2ned(pos)
+    ypr = ypr=extract_yaw_pitch_roll(IMUdata);
+    num_ts = len(IMU_ts)
+    sz = struct.calcsize(struct_format);
+    base = 0;
+    times = [];
+    out = open(outname, 'wb');
+    with open(filename,'rb') as file:
+        while (1):
+            buf = file.read(sz);
+            if (len(buf) < sz ):
+                break;
+            pnt = unpack(buf)
+            ts = pnt['ts']
+            while (ts >= IMU_ts[IMU_idx+1] and IMU_idx < num_ts):
+                IMU_idx += 1;
+            #this is the end    
+            if (IMU_idx >= num_ts) :
+                break;
+            yaw = ypr[IMU_idx,0]                
+            R = pnt['dist']
+            omega = pnt['omega']
+            alpha = pnt['az']+yaw;
+            X = R * np.cos(omega) * np.sin(alpha) + ned[IMU_idx,0]
+            Y = R * np.cos(omega) * np.cos(alpha) + ned[IMU_idx,1]
+            Z = R * np.sin(omega)  #do not add ned[2] - alt is wrong
+            bf = struct.pack('ffff',X,Y,Z,1.0)    
+            out.write(bf)
+            points.append([X,Y,Z])
+            cnt = cnt-1
+            if (cnt<0):
+                break;
+                
+    out.close();     
+    return points   
+    return
+    
+            
+
+
+#%%    
 
 def save_csv(path, data):
     with open(path, 'w') as fp:
@@ -141,53 +234,6 @@ def calc(dis, azimuth, laser_id, timestamp):
     Z = R * np.sin(omega)
     return [X, Y, Z, timestamp]
 
-def unpack(dirs):
-    files = glob.glob(dirs + '/*.bin')
-    points = []
-    scan_index = 0
-    prev_azimuth = None
-    for x in files:
-        d = open(x, 'rb').read()
-        n = len(d)
-        for offset in xrange(0, n, 1223):
-            ts = d[offset : offset + 17]
-            data = d[offset + 17 : offset + 1223]
-            print (ts, len(data))
-            timestamp, factory = struct.unpack_from("<IH", data, offset=1200)
-            assert factory == 0x2237, hex(factory)  # 0x22=VLP-16, 0x37=Strongest Return
-            timestamp = float(ts)
-            seq_index = 0
-            for offset in xrange(0, 1200, 100):
-                flag, azimuth = struct.unpack_from("<HH", data, offset)
-                assert flag == 0xEEFF, hex(flag)
-                for step in xrange(2):
-                    seq_index += 1
-                    azimuth += step
-                    azimuth %= ROTATION_MAX_UNITS
-                    if prev_azimuth is not None and azimuth < prev_azimuth:
-                        file_fmt = os.path.join(dirs, '%Y-%m-%d_%H%M')
-                        path = datetime.now().strftime(file_fmt)
-                        try:
-                            if os.path.exists(path) is False:
-                                os.makedirs(path)
-                        except Exception as e:
-                            print (e)
-                        if not points:
-                            timestamp_str = '%.6f' % time.time()
-                        else:
-                            timestamp_str = '%.6f' % points[0][3]
-                        csv_index = '%08d' % scan_index
-                        save_csv("{}/i{}_{}.csv".format(path, csv_index, timestamp_str), points)
-                        logger.info("{}/i{}_{}.csv".format(path, csv_index, timestamp_str))
-                        scan_index += 1
-                        points = []
-                    prev_azimuth = azimuth
-                    # H-distance (2mm step), B-reflectivity (0
-                    arr = struct.unpack_from('<' + "HB" * 16, data, offset + 4 + step * 48)
-                    for i in xrange(NUM_LASERS):
-                        time_offset = (55.296 * seq_index + 2.304 * i) / 1000000.0
-                        if arr[i * 2] != 0:
-                            points.append(calc(arr[i * 2], azimuth, i, timestamp + time_offset))
 
 #%%                            
 def save_package(dirs, data_queue):
