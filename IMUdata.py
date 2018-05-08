@@ -96,8 +96,8 @@ def extract_quaternion(IMUdata):
     
 def extract_ts(IMUdata):
     bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
-    ts = np.array([(d['ts_s'],d['ts_ns']) for d in np.array(IMUdata)[bFix]]);
-    return np.array( ts )
+    ts  = [ROS_ts(d['ts_s'],d['ts_ns']) for d in np.array(IMUdata)[bFix]];
+    return ts;
 
 #only linear - there were no angle velocities :(    
 def extract_twist(IMUdata):
