@@ -123,3 +123,6 @@ class ROS_ts:
             ns = -ns;
         return "({:s}{:d}.{:09d})".format(sign,self.s, ns)
         
+    def __copy__(self):
+        result = ROS_ts(self.s, self.ns)
+        return result        
