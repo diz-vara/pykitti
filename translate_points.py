@@ -51,15 +51,21 @@ def translate_points(points, imu_to_velo_rot, IMUdata):
         #this is the end    
         if (IMU_idx >= num_ts) :
             break;
+            
+        dt = (time_ref - Ref_ts[IMU_idx]).double();
+        time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
+        
+        d_pos = (ned[IMU_idx+1]-ned[IMU_idx])/time_step*dt;             
+              
         
         pt = np.array([pnt['X'], pnt['Y'], pnt['Z']])
         pt = np.dot(pt, imu_to_velo_rot.transpose())
             
-        new_point = np.dot(pt, q[IMU_idx].rotation_matrix) + ned[IMU_idx]
+        new_point = np.dot(pt, q[IMU_idx].rotation_matrix) + ned[IMU_idx] + d_pos;
 
         out.append(new_point)
-        diffs.append(IMU_idx)
-        neds.append(ned[IMU_idx]);
+        diffs.append(d_pos)
+        neds.append(ned[IMU_idx]+d_pos);
         cnt = cnt-1
         if (cnt<0):
             break;

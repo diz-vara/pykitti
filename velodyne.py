@@ -128,7 +128,7 @@ def read_velo_file(path):
                                                      intensity, 
                                                      copy.copy(point_ts))))
                         point_ts += VLP16_DSR_TOFFSET_NS;
-                        if (R > 0 and intensity > 0):
+                        if (R > 1.2 and intensity > 0):
                             #pickle.dump(point,p_file);
                             bf = pack(point)
                             out_file.write(bf);
@@ -151,7 +151,7 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            if (packet_cnt > 1500):
+            if (packet_cnt > 3000):
                 break;
     out_file.close();        
     return points, packet_cnt        
