@@ -16,6 +16,7 @@ import math
 
 import navpy
 
+from ROS_ts import ROS_ts
 
 def unpack_IMUdata(data):
     keys = [
@@ -79,27 +80,34 @@ def read_IMUfile(filename):
     return np.array(IMUdata);
      
 def extract_position(IMUdata):
-    bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
+    bFix = np.array([(d['bFix'] & d['bIMU']) == 1  for d in IMUdata]);
     Pos = [(d['Lat'], d['Lon'], d['Alt']) for d in np.array(IMUdata)[bFix]];
     return np.array(Pos)
     
 def extract_linacc(IMUdata):
-    bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
+    bFix = np.array([(d['bFix'] & d['bIMU']) == 1  for d in IMUdata]);
     acc = [(d['LAx'], d['LAy'], d['LAz']) for d in np.array(IMUdata)[bFix]];
                   
     return np.array( acc )
     
 def extract_quaternion(IMUdata):
-    bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
+    bFix = np.array([(d['bFix'] & d['bIMU']) == 1  for d in IMUdata]);
     Q = [Quaternion(d['Qw'], d['Qx'], d['Qy'], d['Qz']) for d in np.array(IMUdata)[bFix]]
     return np.array( Q )
     
 def extract_ts(IMUdata):
-    bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
+    bFix = np.array([(d['bFix'] & d['bIMU']) == 1  for d in IMUdata]);
     ts  = [ROS_ts(d['ts_s'],d['ts_ns']) for d in np.array(IMUdata)[bFix]];
     return ts;
 
-#only linear - there were no angle velocities :(    
+
+def extract_time_ref(IMUdata):
+    bFix = np.array([(d['bFix'] & d['bIMU'])==1 for d in IMUdata]); 
+    ts  = [ROS_ts(d['Tref_s'],d['Tref_ns']) for d in np.array(IMUdata)[bFix]];
+    return ts;
+    
+    
+    #only linear - there were no angle velocities :(    
 def extract_twist(IMUdata):
     bTwist = np.array([d['bTwist']==1 for d in IMUdata]);
 
@@ -128,7 +136,7 @@ def quaternion_to_euler_angle(w, x, y, z):
     
 
 def extract_euler(IMUdata):
-    bFix = np.array([d['bFix']==1 and d['bIMU'] == 1  for d in IMUdata]);
+    bFix = np.array([(d['bFix'] & d['bIMU']) == 1  for d in IMUdata]);
     e = [quaternion_to_euler_angle(d['Qw'], d['Qx'], d['Qy'], d['Qz']) for d in np.array(IMUdata)[bFix]]
     return np.array( e )
      
