@@ -41,7 +41,7 @@ def read_ts(file):
 
 #%%
 
-point_keys = ['az', 'dist', 'intensity', 'omega', 'ts']    
+point_keys = ['X', 'Y', 'Z', 'intensity', 'ts']    
     
 def read_velo_file(path):
     
@@ -111,20 +111,24 @@ def read_velo_file(path):
                     point_az = az;
                     point_ts = copy.copy(firing_ts);
                     for  laser_id in range (VLP16_SCANS_PER_FIRING):
-                        distance = arr[laser_id*2] * DISTANCE_RESOLUTION;
+                        R = arr[laser_id*2] * DISTANCE_RESOLUTION;
                         intensity = arr[laser_id*2+1];
                         point_az += dd_az;
                         if (point_az > 180):
                             point_az -= 360;
                         if (point_az < -180):
                             point_az += 360;
-                        point_az_rad = point_az * np.pi/180.;    
+                        alpha = point_az * np.pi/180.;    
                         omega = LASER_ANGLES[laser_id] * np.pi / 180.0
-                        point = dict(zip(point_keys,(point_az_rad, distance, 
-                                                     intensity, omega, 
-                                                     point_ts)))
+                        X = R * np.cos(omega) * np.cos(alpha)
+                        Y = R * np.cos(omega) * np.sin(alpha)
+                        Z = R * np.sin(omega)  #do not add ned[2] - alt is wrong
+
+                        point = dict(zip(point_keys,(X, Y, Z, 
+                                                     intensity, 
+                                                     copy.copy(point_ts))))
                         point_ts += VLP16_DSR_TOFFSET_NS;
-                        if (distance > 0 and intensity > 0):
+                        if (R > 0 and intensity > 0):
                             #pickle.dump(point,p_file);
                             bf = pack(point)
                             out_file.write(bf);
@@ -147,7 +151,7 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            if (packet_cnt > 500):
+            if (packet_cnt > 1500):
                 break;
     out_file.close();        
     return points, packet_cnt        
@@ -158,67 +162,21 @@ def read_velo_file(path):
 struct_format = "dddiiB";
 
 def pack(p0):
-    bf=struct.pack(struct_format,p0['az'],p0['dist'],p0['omega'], #3 x double
+    bf=struct.pack(struct_format,p0['X'],p0['Y'],p0['Z'], #3 x double
                    p0['ts'].s, p0['ts'].ns,           #2 x int32 
                    p0['intensity'])                   #Byte
     return bf    
     
 
 def unpack(bf):
-    az,dist,omega,s, ns,intensity=struct.unpack(struct_format,bf);
-    point = dict(zip(point_keys,(az, dist,
-                                 intensity, omega,
+    x,y,z,s, ns,intensity=struct.unpack(struct_format,bf);
+    point = dict(zip(point_keys,(x,y,z, 
+                                 intensity, 
                                  ROS_ts(s,ns))));
     return point;
 
+
 #%%
-def read_points(filename,outname,IMUdata):
-    points = []
-    IMU_idx = -1
-    cnt = 1e6
-    IMU_ts = extract_ts(IMUdata)
-    pos = extract_position(IMUdata);
-    ned = lla2ned(pos)
-    ypr = ypr=extract_yaw_pitch_roll(IMUdata);
-    num_ts = len(IMU_ts)
-    sz = struct.calcsize(struct_format);
-    base = 0;
-    times = [];
-    out = open(outname, 'wb');
-    with open(filename,'rb') as file:
-        while (1):
-            buf = file.read(sz);
-            if (len(buf) < sz ):
-                break;
-            pnt = unpack(buf)
-            ts = pnt['ts']
-            while (ts >= IMU_ts[IMU_idx+1] and IMU_idx < num_ts):
-                IMU_idx += 1;
-            #this is the end    
-            if (IMU_idx >= num_ts) :
-                break;
-            yaw = ypr[IMU_idx,0]                
-            R = pnt['dist']
-            omega = pnt['omega']
-            alpha = pnt['az']+yaw;
-            X = R * np.cos(omega) * np.sin(alpha) + ned[IMU_idx,0]
-            Y = R * np.cos(omega) * np.cos(alpha) + ned[IMU_idx,1]
-            Z = R * np.sin(omega)  #do not add ned[2] - alt is wrong
-            bf = struct.pack('ffff',X,Y,Z,1.0)    
-            out.write(bf)
-            points.append([X,Y,Z])
-            cnt = cnt-1
-            if (cnt<0):
-                break;
-                
-    out.close();     
-    return points   
-    return
-    
-            
-
-
-#%%    
 
 def save_csv(path, data):
     with open(path, 'w') as fp:
