@@ -13,28 +13,32 @@ class ROS_ts:
     _billion = 1000000000
     
     def __init__(self, s=0, ns=None):
-        _type = type(s)
-        if (_type == list or _type == np.ndarray or _type == tuple):        
-            self.s = int(s[0]);
-            if ( len(s) > 1):
-                self.ns = int(s[1]);
+        if ( s is None):
+            self.ns = self._billion - 1
+            self.s  = self._billion - 1
+        else:    
+            _type = type(s)
+            if (_type is list or _type is np.ndarray or _type is tuple):        
+                self.s = int(s[0]);
+                if ( len(s) > 1):
+                    self.ns = int(s[1]);
+                else:
+                    self.ns = 0;
+            elif (_type is ROS_ts):
+                self.s = s.s;
+                self.ns = s.ns;
             else:
-                self.ns = 0;
-        elif (_type == ROS_ts):
-            self.s = s.s;
-            self.ns = s.ns;
-        else:
-            self.s = int(s)
-            if (_type == float or _type == np.float32 or _type == np.float64 ):
-                self.ns = int((s-int(s))*self._billion)
-            elif (ns is None):                
-                self.ns = int(s);
-                self.s = 0;
-            else:
-                self.ns = ns;
-        if (self.ns >= self._billion):
-            self.s += self.ns // self._billion;
-            self.ns = self.ns % self._billion;
+                self.s = int(s)
+                if (_type == float or _type == np.float32 or _type == np.float64 ):
+                    self.ns = int((s-int(s))*self._billion)
+                elif (ns is None):                
+                    self.ns = int(s);
+                    self.s = 0;
+                else:
+                    self.ns = ns;
+            if (self.ns >= self._billion):
+                self.s += self.ns // self._billion;
+                self.ns = self.ns % self._billion;
         
     def to_string(self):
         return "{:d}.{:09d}".format(self.s, self.ns)
@@ -125,4 +129,8 @@ class ROS_ts:
         
     def __copy__(self):
         result = ROS_ts(self.s, self.ns)
-        return result        
+        return result    
+        
+    def double(self):
+        result = np.double(self.s) + np.double(self.ns)/1e9
+        return result;
