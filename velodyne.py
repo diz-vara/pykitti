@@ -41,7 +41,7 @@ def read_ts(file):
 
 #%%
 
-point_keys = ['X', 'Y', 'Z', 'intensity', 'ts']    
+point_keys = ['X', 'Y', 'Z', 'intensity', 'frame', 'ts']    
     
 def read_velo_file(path):
     
@@ -54,6 +54,7 @@ def read_velo_file(path):
 
     
     points = []
+    frame = 0
     
     base_ts = ROS_ts(0)
     prev_ts = 0
@@ -62,6 +63,7 @@ def read_velo_file(path):
     with open(v_file, 'rb') as vf:
         d_az = 0.41111;  #default az step    
         old_az = -1;
+        prev_az = -181;
         cnt = 0;
         while (1):
             #scan = np.fromfile(vf, dtype=np.uint8, count=PACKET_SIZE);
@@ -76,7 +78,7 @@ def read_velo_file(path):
                 corr_ts = 0;
                 
             #corrections for the case of GPS error 
-            # that couses extra second added 
+            # that causes extra second added 
             ts -= corr_ts;  
             #print(ts-prev_ts)
             if (ts - prev_ts > 1000000):
@@ -102,6 +104,12 @@ def read_velo_file(path):
                 if (old_az >= 0):
                     d_az = az-old_az;
                 old_az = az;
+                if (d_az < 0):
+                    d_az += 360;
+                    
+                if (az > 180):
+                    az -= 360;
+
                 dd_az = d_az/VLP16_BLOCK_TDURATION * VLP16_DSR_TOFFSET;
                 
                 for fire in range(VLP16_FIRINGS_PER_BLOCK):
@@ -116,8 +124,12 @@ def read_velo_file(path):
                         point_az += dd_az;
                         if (point_az > 180):
                             point_az -= 360;
+
                         if (point_az < -180):
                             point_az += 360;
+                        if (point_az - prev_az < 0):
+                            frame += 1;
+                        prev_az = point_az    
                         alpha = point_az * np.pi/180.;    
                         omega = LASER_ANGLES[laser_id] * np.pi / 180.0
                         X = R * np.cos(omega) * np.cos(alpha)
@@ -125,7 +137,7 @@ def read_velo_file(path):
                         Z = R * np.sin(omega)  #do not add ned[2] - alt is wrong
 
                         point = dict(zip(point_keys,(X, Y, Z, 
-                                                     intensity, 
+                                                     intensity, frame,
                                                      copy.copy(point_ts))))
                         point_ts += VLP16_DSR_TOFFSET_NS;
                         if (R > 1.2 and intensity > 0):
@@ -151,10 +163,10 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            if (packet_cnt > 3000):
+            if (packet_cnt > 10000):
                 break;
     out_file.close();        
-    return points, packet_cnt        
+    return points, frame
             
     
 #%%
