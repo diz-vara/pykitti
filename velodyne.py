@@ -121,6 +121,21 @@ def read_velo_file(path):
                     for  laser_id in range (VLP16_SCANS_PER_FIRING):
                         R = arr[laser_id*2] * DISTANCE_RESOLUTION;
                         intensity = arr[laser_id*2+1];
+                        if ( ( R > 1 and (point_az < -5 or point_az > 5) or R > 2.5 )  and intensity > 0):
+                            alpha = point_az * np.pi/180.;    
+                            omega = LASER_ANGLES[laser_id] * np.pi / 180.0
+                            X = R * np.cos(omega) * np.cos(alpha)
+                            Y = R * np.cos(omega) * np.sin(alpha)
+                            Z = R * np.sin(omega)  #do not add ned[2] - alt is wrong
+    
+                            point = dict(zip(point_keys,(X, Y, Z, 
+                                                         intensity, frame,
+                                                         copy.copy(point_ts))))
+                            #pickle.dump(point,p_file);
+                            bf = pack(point)
+                            out_file.write(bf);
+                            cnt += 1
+                            points.append(point)
                         point_az += dd_az;
                         if (point_az > 180):
                             point_az -= 360;
@@ -130,22 +145,7 @@ def read_velo_file(path):
                         if (point_az - prev_az < 0):
                             frame += 1;
                         prev_az = point_az    
-                        alpha = point_az * np.pi/180.;    
-                        omega = LASER_ANGLES[laser_id] * np.pi / 180.0
-                        X = R * np.cos(omega) * np.cos(alpha)
-                        Y = R * np.cos(omega) * np.sin(alpha)
-                        Z = R * np.sin(omega)  #do not add ned[2] - alt is wrong
-
-                        point = dict(zip(point_keys,(X, Y, Z, 
-                                                     intensity, frame,
-                                                     copy.copy(point_ts))))
                         point_ts += VLP16_DSR_TOFFSET_NS;
-                        if (R > 1.2 and intensity > 0):
-                            #pickle.dump(point,p_file);
-                            bf = pack(point)
-                            out_file.write(bf);
-                            cnt += 1
-                            points.append(point)
                         #print(point_ts, point['ts'], points[-1]['ts'])
                         #if (len(points)> 1):
                         #    print(points[-2]['ts'])
@@ -163,12 +163,13 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            if (packet_cnt > 10000):
+            if (packet_cnt > 2000):
                 break;
     out_file.close();        
     return points, frame
             
     
+
 #%%
 
 struct_format = "dddiiB";
