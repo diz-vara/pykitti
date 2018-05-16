@@ -45,6 +45,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
     base_velo_time = copy.copy(ts);
 
 
+    cnt = 0;
         
     for pnt in points:
 
@@ -67,17 +68,19 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
         pt = np.array([pnt['X'], pnt['Y'], pnt['Z']])
         pt = np.dot(pt, imu_to_velo_inv)
         
-        if (pt[0] > 1) and (pt[0] < 45) and (pt[1] > -25) and (pt[1] < 25) and (pt[2] > -1.5) and (pt[2] < 10.5):
+        if (pt[0] > 2.2) and (pt[0] < 45) and (pt[1] > -25) and (pt[1] < 25) and (pt[2] > -2.5) and (pt[2] < 50.5):
             
             new_point = q_int.rotate(pt) + ned[IMU_idx] + d_pos;
                                
     
             out.append(new_point)
-            out.append(ned[IMU_idx] + d_pos)
+            #out.append(ned[IMU_idx] + d_pos)
             diffs.append(pnt['frame']);
-            diffs.append(pnt['frame']);
-            #diffs.append(getcolor(pnt['frame']));
+            #diffs.append(pnt['frame']);
             qus.append(q_int);
+        cnt += 1;
+        if (cnt%1000 == 0):
+            print(cnt)
                 
     return np.array(out),np.array(qus), np.array(diffs)-1
     
