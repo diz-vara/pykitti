@@ -68,7 +68,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
         pt = np.array([pnt['X'], pnt['Y'], pnt['Z']])
         pt = np.dot(pt, imu_to_velo_inv)
         
-        if (pt[0] > 2.2) and (pt[0] < 45) and (pt[1] > -25) and (pt[1] < 25) and (pt[2] > -2.5) and (pt[2] < 50.5):
+        if (pt[0] > 0.5) and (pt[0] < 45) and (pt[1] > -25) and (pt[1] < 25) and (pt[2] > -2.5) and (pt[2] < 50.5):
             
             new_point = q_int.rotate(pt) + ned[IMU_idx] + d_pos;
                                
