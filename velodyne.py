@@ -54,6 +54,7 @@ def read_velo_file(path):
 
     
     points = []
+    frame_stamps = []
     frame = 0
     
     base_ts = ROS_ts(0)
@@ -65,6 +66,7 @@ def read_velo_file(path):
         old_az = -1;
         prev_az = -181;
         cnt = 0;
+        
         while (1):
             #scan = np.fromfile(vf, dtype=np.uint8, count=PACKET_SIZE);
             scan = vf.read(PACKET_SIZE);
@@ -144,6 +146,8 @@ def read_velo_file(path):
                             point_az += 360;
                         if (point_az - prev_az < 0):
                             frame += 1;
+                        if (prev_az < 0 and point_az >= 0):
+                            frame_stamps.append( point_ts) ;
                         prev_az = point_az    
                         point_ts += VLP16_DSR_TOFFSET_NS;
                         #print(point_ts, point['ts'], points[-1]['ts'])
@@ -163,10 +167,10 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            if (packet_cnt > 2000):
+            if (packet_cnt > 4000):
                 break;
     out_file.close();        
-    return points, frame
+    return points, frame_stamps
             
     
 
