@@ -32,9 +32,9 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
     diffs = []
     
     pnt = points[0];
-    ts = pnt['ts']
+    base_velo_time = copy.copy(pnt['ts']);
 
-    while (ts >= IMU_ts[IMU_idx+1] and IMU_idx < num_ts):
+    while (base_velo_time >= IMU_ts[IMU_idx+1] and IMU_idx < num_ts):
         IMU_idx += 1;
     #this is the end    
     if (IMU_idx >= num_ts) :
@@ -42,7 +42,6 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
 
     #IMU_idx -= 1;    
     base_time_ref = Ref_ts[IMU_idx];    
-    base_velo_time = copy.copy(ts);
 
 
     cnt = 0;
@@ -53,7 +52,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
 
         time_ref = ts - base_velo_time + base_time_ref;
         
-        while (time_ref >= Ref_ts[IMU_idx+1] and IMU_idx < num_ts):
+        while (time_ref > Ref_ts[IMU_idx+1] and IMU_idx < num_ts):
             IMU_idx += 1;
         #this is the end    
         if (IMU_idx >= num_ts) :
@@ -66,9 +65,10 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
         q_int = q[IMU_idx].slerp(q[IMU_idx],q[IMU_idx+1], dt/time_step);                   
         
         pt = np.array([pnt['X'], pnt['Y'], pnt['Z']])
+        
         pt = np.dot(pt, imu_to_velo_inv)
         
-        if (pt[0] > 0.5) and (pt[0] < 45) and (pt[1] > -25) and (pt[1] < 25) and (pt[2] > -2.5) and (pt[2] < 50.5):
+        if (pt[0] > 0.5) and (pt[0] < 110) and (pt[1] > -35) and (pt[1] < 15) and (pt[2] > -2.5) and (pt[2] < 100):
             
             new_point = q_int.rotate(pt) + ned[IMU_idx] + d_pos;
                                
@@ -82,5 +82,22 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
         if (cnt%1000 == 0):
             print(cnt)
                 
-    return np.array(out),np.array(qus), np.array(diffs)-1
+            
+    #manual zero-az point re-referencing
+    ts = ROS_ts(1520430272,617093234);
+    time_ref = ts - base_velo_time + base_time_ref;
+    IMU_idx = -1;
+    while (time_ref > Ref_ts[IMU_idx+1] and IMU_idx < num_ts):
+        IMU_idx += 1;
+
+    dt = (time_ref - Ref_ts[IMU_idx]).double();
+    time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
+    print (IMU_idx,dt,time_step)        
+    
+    d_pos = (ned[IMU_idx+1]-ned[IMU_idx])/time_step*dt + ned[IMU_idx];             
+    q_int = q[IMU_idx].slerp(q[IMU_idx],q[IMU_idx+1], dt/time_step);                   
+
+    
+        
+    return np.array(out),np.array(qus), np.array(diffs)-1, d_pos, q_int
     
