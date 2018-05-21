@@ -40,6 +40,10 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
     if (IMU_idx >= num_ts) :
         return;
 
+    #IMU_idx -= 1;
+    #if (IMU_idx < 0):
+    #    IMU_idx = 0;
+        
     #IMU_idx -= 1;    
     base_time_ref = Ref_ts[IMU_idx];    
 
@@ -68,7 +72,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
         
         pt = np.dot(pt, imu_to_velo_inv)
         
-        if (pt[0] > 0.5) and (pt[0] < 110) and (pt[1] > -35) and (pt[1] < 15) and (pt[2] > -2.5) and (pt[2] < 100):
+        if (pt[0] > 0.5) and (pt[0] < 120) and (pt[1] > -25) and (pt[1] < 35) and (pt[2] > -2.8) and (pt[2] < 100.5):
             
             new_point = q_int.rotate(pt) + ned[IMU_idx] + d_pos;
                                
@@ -77,7 +81,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
             #out.append(ned[IMU_idx] + d_pos)
             diffs.append(pnt['frame']);
             #diffs.append(pnt['frame']);
-            qus.append(q_int);
+            qus.append(ned[IMU_idx]+d_pos);
         cnt += 1;
         if (cnt%1000 == 0):
             print(cnt)
@@ -90,7 +94,14 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
     while (time_ref > Ref_ts[IMU_idx+1] and IMU_idx < num_ts):
         IMU_idx += 1;
 
+    
+    #difference from one step, but I;ll use another ?????
     dt = (time_ref - Ref_ts[IMU_idx]).double();
+
+    IMU_idx -= 2;
+    if (IMU_idx < 0):
+        IMU_idx = 0;
+        
     time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
     print (IMU_idx,dt,time_step)        
     
