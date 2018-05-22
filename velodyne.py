@@ -123,7 +123,7 @@ def read_velo_file(path):
                     for  laser_id in range (VLP16_SCANS_PER_FIRING):
                         R = arr[laser_id*2] * DISTANCE_RESOLUTION;
                         intensity = arr[laser_id*2+1];
-                        if ( ( R > 1 and (point_az < -5 or point_az > 5) or R > 2.5 )  and intensity > 0):
+                        if ( ( (R > 1 and (point_az < -10 or point_az > 10)) or R > 2.7 )  and intensity > 0):
                             alpha = point_az * np.pi/180.;    
                             omega = LASER_ANGLES[laser_id] * np.pi / 180.0
                             X = R * np.cos(omega) * np.cos(alpha)
@@ -167,8 +167,8 @@ def read_velo_file(path):
             #      format(offset,tail[0], tail[1]))
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
-            if (packet_cnt > 4000):
-                break;
+            #if (packet_cnt > 4000):
+            #    break;
     out_file.close();        
     return points, frame_stamps
             

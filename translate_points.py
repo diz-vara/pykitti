@@ -40,11 +40,10 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
     if (IMU_idx >= num_ts) :
         return;
 
-    #IMU_idx -= 1;
-    #if (IMU_idx < 0):
-    #    IMU_idx = 0;
+    IMU_idx -= 2;
+    if (IMU_idx < 0):
+        IMU_idx = 0;
         
-    #IMU_idx -= 1;    
     base_time_ref = Ref_ts[IMU_idx];    
 
 
@@ -61,6 +60,8 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
         #this is the end    
         if (IMU_idx >= num_ts) :
             break;
+
+            
             
         dt = (time_ref - Ref_ts[IMU_idx]).double();
         time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
@@ -98,9 +99,6 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None):
     #difference from one step, but I;ll use another ?????
     dt = (time_ref - Ref_ts[IMU_idx]).double();
 
-    IMU_idx -= 2;
-    if (IMU_idx < 0):
-        IMU_idx = 0;
         
     time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
     print (IMU_idx,dt,time_step)        
