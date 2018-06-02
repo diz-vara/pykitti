@@ -43,7 +43,7 @@ def read_ts(file):
 
 point_keys = ['X', 'Y', 'Z', 'intensity', 'frame', 'ts']    
     
-def read_velo_file(path):
+def read_velo_file(path,framesNr=1e9):
     
     packet_cnt = 0;
     ts_file = os.path.join(path,'timestampsU.txt')
@@ -64,7 +64,7 @@ def read_velo_file(path):
     with open(v_file, 'rb') as vf:
         d_az = 0.41111;  #default az step    
         old_az = -1;
-        prev_az = -181;
+        prev_az = 181;
         cnt = 0;
         
         while (1):
@@ -78,6 +78,7 @@ def read_velo_file(path):
             if (prev_ts == 0):
                 prev_ts = ts;
                 corr_ts = 0;
+                continue; #skip first block
                 
             #corrections for the case of GPS error 
             # that causes extra second added 
@@ -124,7 +125,7 @@ def read_velo_file(path):
                         R = arr[laser_id*2] * DISTANCE_RESOLUTION;
                         intensity = arr[laser_id*2+1];
                         if ( ( (R > 1 and (point_az < -10 or point_az > 10)) or R > 2.7 )  and intensity > 0):
-                            alpha = point_az * np.pi/180.;    
+                            alpha = 0 - point_az * np.pi/180. ;  #NEGATE!!!  
                             omega = LASER_ANGLES[laser_id] * np.pi / 180.0
                             X = R * np.cos(omega) * np.cos(alpha)
                             Y = R * np.cos(omega) * np.sin(alpha)
@@ -162,9 +163,12 @@ def read_velo_file(path):
                         az += 360;
                     firing_ts += VLP16_FIRING_TOFFSET_NS
 
+
             #tail=struct.unpack_from('<IH', scan, offset)
             #print("{:d} {:d} {:X}".
             #      format(offset,tail[0], tail[1]))
+            if (frame >= framesNr):
+                break;
             packet_cnt = packet_cnt + 1
             print(packet_cnt)
             #if (packet_cnt > 4000):
@@ -261,7 +265,7 @@ def capture(port, data_queue):
 
 
 if __name__ == "__main__":
-    p,n=read_velo_file('E:\\Data\\Voxels\\201804\\spb-50-0\\velodyne_packets\\')
+    points21_f, frames21_f=read_velo_file('E:\\Data\\Voxels\\2018_03_08\\L21\\velodyne_packets\\')
 
 """    
     if len(sys.argv) < 3:
