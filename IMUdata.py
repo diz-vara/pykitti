@@ -157,3 +157,18 @@ def lla2ned(lla, ref=None):
     ned = [ navpy.lla2ned(pos[0],pos[1],pos[2], ref[0], ref[1], ref[2]) for pos in lla];
     return np.array(ned);
 
+def lla2enu(lla, ref=None):
+    ned = lla2ned(lla, ref);
+    enu = ned[:,[1,0,2]];
+    enu [:,2] = 0 - enu[:,2];               
+    return enu;
+
+
+def ned2lla(ned, ref):
+    lla = navpy.ned2lla(ned, ref[0], ref[1], ref[2]);
+    return np.array(lla).transpose();
+
+def enu2lla(enu, ref):
+    ned = enu[:,[1,0,2]];
+    ned [:,2] = 0 - ned[:,2];               
+    return (ned2lla(ned,ref));
