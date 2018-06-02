@@ -34,7 +34,7 @@ def rotationMatrixToEulerAngles(R) :
 
     return np.array([x, y, z])
 
-# Calculates Rotation Matrix given euler angles.
+# Calculates Rotation Matrix given euler angles. [rpy]
 def eulerAnglesToRotationMatrix(theta) :
      
     R_x = np.array([[1,         0,                  0                   ],
@@ -57,6 +57,22 @@ def eulerAnglesToRotationMatrix(theta) :
                      
     R = np.dot(R_z, np.dot( R_y, R_x ))
  
-    return R
+    return np.matrix(R)
     
+
+def remove_yaw(rm):
+    eul = rotationMatrixToEulerAngles(rm);
+    angle = [0,0, 0-eul[2]];
+
+    return (rm * eulerAnglesToRotationMatrix(angle));
+
+
+# Inputs:
+#  road_to_velo - what I've measured on the road
+#  imu -        - IMU rotation for that frame      
+def get_imu_to_velo_rotation(road_to_velo, imu):
+    road_to_velo_no_yaw = remove_yaw(road_to_velo);
+    imu_no_yaw = remove_yaw(imu);
+    
+    return (imu_no_yaw * road_to_velo_no_yaw).transpose();
     
