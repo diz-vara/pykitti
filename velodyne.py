@@ -45,14 +45,18 @@ point_keys = ['X', 'Y', 'Z', 'intensity', 'frame', 'ts']
     
 def read_velo_file(path,framesNr=1e9):
     
+    format_out = 'fffBBBB'
+
+    
     packet_cnt = 0;
     ts_file = os.path.join(path,'timestampsU.txt')
     time_stamps = read_ts(ts_file)
     
     v_file = os.path.join(path, 'velodyne.bin')
-    out_file = open(os.path.join(path, 'points.bin'),'wb');
+    o_file = os.path.join(path, 'points__.bin');
 
     
+
     points = []
     frame_stamps = []
     frame = 0
@@ -61,7 +65,8 @@ def read_velo_file(path,framesNr=1e9):
     prev_ts = 0
     corr_ts = 0
     
-    with open(v_file, 'rb') as vf:
+    with open(v_file, 'rb') as vf, \
+         open(o_file,'wb') as out_file:
         d_az = 0.41111;  #default az step    
         old_az = -1;
         prev_az = 181;
@@ -138,7 +143,7 @@ def read_velo_file(path,framesNr=1e9):
                             bf = pack(point)
                             out_file.write(bf);
                             cnt += 1
-                            points.append(point)
+                            #points.append(point)
                         point_az += dd_az;
                         if (point_az > 180):
                             point_az -= 360;
@@ -180,19 +185,19 @@ def read_velo_file(path,framesNr=1e9):
 
 #%%
 
-struct_format = "dddiiB";
+points_struct_format = "dddiiiB";
 
 def pack(p0):
-    bf=struct.pack(struct_format,p0['X'],p0['Y'],p0['Z'], #3 x double
-                   p0['ts'].s, p0['ts'].ns,           #2 x int32 
+    bf=struct.pack(points_struct_format,p0['X'],p0['Y'],p0['Z'], #3 x double
+                   p0['ts'].s, p0['ts'].ns, p0['frame'],          #2 x int32 
                    p0['intensity'])                   #Byte
     return bf    
     
 
 def unpack(bf):
-    x,y,z,s, ns,intensity=struct.unpack(struct_format,bf);
+    x,y,z,s, ns,fr,intensity=struct.unpack(points_struct_format,bf);
     point = dict(zip(point_keys,(x,y,z, 
-                                 intensity, 
+                                 intensity, fr,
                                  ROS_ts(s,ns))));
     return point;
 
