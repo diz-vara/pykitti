@@ -14,10 +14,10 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None, base_frame=0):
     Ref_ts = extract_time_ref(IMUdata)
     pos = extract_position(IMUdata);
 
+    time_ref_corr = ROS_ts(-0.343)
 
 
     enu = lla2enu(pos,base);
-    #enu[:,0] = 0 - enu[:,0];
     q = extract_quaternion(IMUdata);
     num_ts = len(IMU_ts)
     times = [];
@@ -27,11 +27,11 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None, base_frame=0):
     qs = []
     
     pnt = points[0];
-    base_velo_time = copy.copy(pnt['ts']);
+    base_velo_time = copy.copy(pnt['ts']) + time_ref_corr;
 
     print(base_velo_time)
 
-    while (base_velo_time >= IMU_ts[IMU_idx+1] and IMU_idx < num_ts-10):
+    while (IMU_idx < num_ts-3 and base_velo_time >= Ref_ts[IMU_idx+1] ):
         IMU_idx += 1;
     #this is the end    
     if (IMU_idx >= num_ts) :
@@ -52,11 +52,11 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None, base_frame=0):
     step = nPoints//1000;
     for pnt in points:
 
-        ts = pnt['ts']
+        ts = pnt['ts'] + time_ref_corr;
 
-        time_ref = ts - base_velo_time + base_time_ref;
+        #time_ref = ts - base_velo_time + base_time_ref;
         
-        while (IMU_idx < num_ts-1 and time_ref > Ref_ts[IMU_idx+1] ):
+        while (IMU_idx < num_ts-1 and ts > Ref_ts[IMU_idx+1] ):
             IMU_idx += 1;
         #this is the end    
         if (IMU_idx >= num_ts - 1 ) :
@@ -64,7 +64,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None, base_frame=0):
 
             
             
-        dt = (time_ref - Ref_ts[IMU_idx]).double();
+        dt = (ts - Ref_ts[IMU_idx]).double();
         time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
         
         d_pos = (enu[IMU_idx+1]-enu[IMU_idx])/time_step*dt;   
@@ -74,7 +74,7 @@ def translate_points(points, imu_to_velo_rot, IMUdata,base=None, base_frame=0):
         
         
         #if (pt[0] > 0.5) and (pt[0] < 120) and (pt[1] > -25) and (pt[1] < 35) and (pt[2] > -2.8) and (pt[2] < 100.5):
-        if (pt[0] > 0.5) and (pt[0] < 50) and (pt[1] > -30) and (pt[1] < 30) :
+        if (pt[0] > 0.5) and (pt[0] < 100) and (pt[1] > -30) and (pt[1] < 30) :
             
             pt = np.array(pt * imu_to_velo_rot)[0]
             new_point = np.dot(pt,q_int.rotation_matrix) + enu[IMU_idx] + d_pos;
