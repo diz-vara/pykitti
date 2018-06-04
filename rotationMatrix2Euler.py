@@ -70,9 +70,9 @@ def remove_yaw(rm):
 # Inputs:
 #  road_to_velo - what I've measured on the road
 #  imu -        - IMU rotation for that frame      
-def get_imu_to_velo_rotation(road_to_velo, imu):
-    road_to_velo_no_yaw = remove_yaw(road_to_velo);
-    imu_no_yaw = remove_yaw(imu);
-    
-    return (imu_no_yaw * road_to_velo_no_yaw).transpose();
+def get_imu_to_velo_rotation(world_to_velo, world_to_imu):
+    world_to_velo_no_yaw = remove_yaw(world_to_velo);
+    world_to_imu_no_yaw = remove_yaw(world_to_imu);
+    imu_to_velo = (world_to_velo_no_yaw.transpose() * world_to_imu_no_yaw).transpose()
+    return imu_to_velo;
     
