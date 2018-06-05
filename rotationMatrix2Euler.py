@@ -72,7 +72,7 @@ def remove_yaw(rm):
 #  imu -        - IMU rotation for that frame      
 def get_imu_to_velo_rotation(world_to_velo, world_to_imu):
     world_to_velo_no_yaw = remove_yaw(world_to_velo);
-    world_to_imu_no_yaw = remove_yaw(world_to_imu);
+    world_to_imu_no_yaw = remove_yaw(world_to_imu).transpose();
     imu_to_velo = (world_to_velo_no_yaw.transpose() * world_to_imu_no_yaw).transpose()
     return imu_to_velo;
     
