@@ -21,7 +21,8 @@ def unpack(bf):
 def translate_points(points_file, imu_to_velo_rot, 
                      IMUdata,
                      base=None, 
-                     base_frame=0):
+                     base_frame=0,
+                     time_corr = -0.343):
     format_4f = 'fffBBBB'
 
     point_color = np.zeros(4,np.uint8);    
@@ -32,7 +33,7 @@ def translate_points(points_file, imu_to_velo_rot,
     Ref_ts = extract_time_ref(IMUdata)
     pos = extract_position(IMUdata);
 
-    time_ref_corr = ROS_ts(-0.343)
+    time_ref_corr = ROS_ts(time_corr)
 
 
     enu = lla2enu(pos,base);
