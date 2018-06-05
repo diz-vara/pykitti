@@ -5,13 +5,23 @@ Created on Thu May 10 12:03:02 2018
 @author: avarfolomeev
 """
 import numpy as np
+import copy
+
+points_struct_format = "dddiiiB";    
+point_keys = ['X', 'Y', 'Z', 'intensity', 'frame', 'ts']    
+
+def unpack(bf):
+    x,y,z,s, ns,fr,intensity=struct.unpack(points_struct_format,bf);
+    point = dict(zip(point_keys,(x,y,z, 
+                                 intensity, fr,
+                                 ROS_ts(s,ns))));
+    return point;
 
 
 def translate_points(points_file, imu_to_velo_rot, 
                      IMUdata,
                      base=None, 
                      base_frame=0):
-    points_struct_format = "dddiiiB";    
     format_4f = 'fffBBBB'
 
     point_color = np.zeros(4,np.uint8);    
@@ -53,7 +63,7 @@ def translate_points(points_file, imu_to_velo_rot,
             
         pnt = unpack(buf);
 
-        base_velo_time = copy.copy(pnt['ts']) + time_ref_corr;
+        base_velo_time = pnt['ts'] + time_ref_corr;
     
         print(base_velo_time)
     
