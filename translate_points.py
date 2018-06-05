@@ -97,7 +97,7 @@ def translate_points(points_file, imu_to_velo_rot,
             
             
             #if (pt[0] > 0.5) and (pt[0] < 120) and (pt[1] > -25) and (pt[1] < 35) and (pt[2] > -2.8) and (pt[2] < 100.5):
-            if (pt[0] > 0.5) and (pt[0] < 50) and (pt[1] > -50) and (pt[1] < 50):
+            if (pt[0] > - 3) and (pt[0] < 70) and (pt[1] > -25) and (pt[1] < 25):
                 
                 pt = np.array(pt * imu_to_velo_rot)[0]
                 new_point = np.dot(pt,q_int.rotation_matrix) + enu[IMU_idx] + d_pos;
