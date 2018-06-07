@@ -92,6 +92,9 @@ class ROS_ts:
             right = ROS_ts(right);
         s = self.s + right.s;
         ns = self.ns + right.ns;
+        while (ns < 0):
+            ns += self._billion;
+            s -= 1;
         if (ns >= self._billion):
             s += 1;
             ns -= self._billion;
