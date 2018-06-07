@@ -75,7 +75,9 @@ def read_IMUfile(filename):
 
     for i in range(nrecords):
         data = np.fromfile(file,dtype=np.int8,count=RECORDSIZE);
-        IMUdata.append(unpack_IMUdata(data));
+        _d = unpack_IMUdata(data);
+        if (_d['bFix'] and _d['bIMU'] and _d['bTimeRef']):
+            IMUdata.append(_d);
     file.close();
     return np.array(IMUdata);
      
