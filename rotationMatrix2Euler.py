@@ -66,7 +66,7 @@ def remove_yaw(rm):
     eul = rotationMatrixToEulerAngles(rm);
     angle = [0,0, 0-eul[2]];
 
-    return (rm * eulerAnglesToRotationMatrix(angle));
+    return ( rm * eulerAnglesToRotationMatrix(angle));
 
 
 # Inputs:
@@ -74,8 +74,8 @@ def remove_yaw(rm):
 #  imu -        - IMU rotation for that frame      
 def get_imu_to_lidar_rotation(world_to_lidar, world_to_imu):
     world_to_lidar_no_yaw = remove_yaw(world_to_lidar);
-    world_to_imu_no_yaw = remove_yaw(world_to_imu).transpose();
-    imu_to_lidar = (world_to_lidar_no_yaw.transpose() * world_to_imu_no_yaw)
+    world_to_imu_no_yaw = remove_yaw(world_to_imu);
+    imu_to_lidar = (world_to_imu_no_yaw.transpose() * world_to_lidar_no_yaw )
     return imu_to_lidar;
     
 
