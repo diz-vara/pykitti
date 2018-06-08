@@ -124,43 +124,43 @@ def translate_points(points_file, imu_to_velo_rot,
         
         step = points_num//1000;
         while(1):
-    
-            ts = pnt['ts'] + time_ref_corr;
-    
-            #time_ref = ts - base_velo_time + base_time_ref;
-            
-            while (IMU_idx < num_ts-1 and ts > Ref_ts[IMU_idx+1] ):
-                IMU_idx += 1;
-            #this is the end    
-            if (IMU_idx >= num_ts - 1 ) :
-                break;
-                
-            dt = (ts - Ref_ts[IMU_idx]).double();
-            time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
-            
-            d_pos = (enu[IMU_idx+1]-enu[IMU_idx])/time_step*dt;   
-            q_int = q[IMU_idx].slerp(q[IMU_idx],q[IMU_idx+1], dt/time_step);                   
-            
-            pt = np.array([pnt['X'], pnt['Y'], pnt['Z']])
-            
-            
-            #if (pt[0] > 0.5) and (pt[0] < 120) and (pt[1] > -25) and (pt[1] < 35) and (pt[2] > -2.8) and (pt[2] < 100.5):
-            if (pt[0] > - 3) and (pt[0] < 70) and (pt[1] > -25) and (pt[1] < 25):
-                
-                pt = np.array(pt * imu_to_velo_rot)[0]
-                new_point = np.dot(pt,q_int.rotation_matrix) + enu[IMU_idx] + d_pos;
-                bf = struct.pack(point_format,new_point[0], new_point[1], new_point[2], 
-                                 point_color[0],point_color[1],
-                                 point_color[2],point_color[3]);
-                o_file.write(bf);
-                                   
+            if (True) : #cnt%20 == 0):
+                ts = pnt['ts'] + time_ref_corr;
         
-                #out.append(new_point)
-                #out.append(ned[IMU_idx] + d_pos)
-                #frames.append(pnt['frame']+base_frame);
-                #diffs.append(pnt['frame']);
-                #enus.append(enu[IMU_idx]+d_pos);
-                #qs.append(q_int);
+                #time_ref = ts - base_velo_time + base_time_ref;
+                
+                while (IMU_idx < num_ts-1 and ts > Ref_ts[IMU_idx+1] ):
+                    IMU_idx += 1;
+                #this is the end    
+                if (IMU_idx >= num_ts - 1 ) :
+                    break;
+                    
+                dt = (ts - Ref_ts[IMU_idx]).double();
+                time_step = (Ref_ts[IMU_idx+1] - Ref_ts[IMU_idx]).double();
+                
+                d_pos = (enu[IMU_idx+1]-enu[IMU_idx])/time_step*dt;   
+                q_int = q[IMU_idx].slerp(q[IMU_idx],q[IMU_idx+1], dt/time_step);                   
+                
+                pt = np.array([pnt['X'], pnt['Y'], pnt['Z']])
+                
+                
+                #if (pt[0] > 0.5) and (pt[0] < 120) and (pt[1] > -25) and (pt[1] < 35) and (pt[2] > -2.8) and (pt[2] < 100.5):
+                if (pt[0] > - 5) and (pt[0] < 70) and (pt[1] > -35) and (pt[1] < 35):
+                    
+                    pt = np.array(pt * imu_to_velo_rot)[0]
+                    new_point = np.dot(pt,q_int.rotation_matrix) + enu[IMU_idx] + d_pos;
+                    bf = struct.pack(point_format,new_point[0], new_point[1], new_point[2], 
+                                     point_color[0],point_color[1],
+                                     point_color[2],point_color[3]);
+                    o_file.write(bf);
+                                       
+            
+                    #out.append(new_point)
+                    #out.append(ned[IMU_idx] + d_pos)
+                    #frames.append(pnt['frame']+base_frame);
+                    #diffs.append(pnt['frame']);
+                    #enus.append(enu[IMU_idx]+d_pos);
+                    #qs.append(q_int);
             buf = p_file.read(point_size);
             if (len(buf) < point_size):
                 break;
@@ -197,7 +197,7 @@ def translate_points(points_file, imu_to_velo_rot,
     #d_pos, q_int
     
 
-def translate_points_arr(pts, imu_to_velo_rot, 
+def translate_points_arr(points, imu_to_velo_rot, 
                      IMUdata,
                      base=None, 
                      base_frame=0,
@@ -224,10 +224,10 @@ def translate_points_arr(pts, imu_to_velo_rot,
     frames = []
     qs = []
     
-    points_num = len(pts)
+    points_num = len(points)
     
     
-    pnt = pts[0]
+    pnt = points[0]
 
     base_velo_time = pnt['ts'] + time_ref_corr;
     
@@ -274,7 +274,7 @@ def translate_points_arr(pts, imu_to_velo_rot,
         
         
         #if (pt[0] > 0.5) and (pt[0] < 120) and (pt[1] > -25) and (pt[1] < 35) and (pt[2] > -2.8) and (pt[2] < 100.5):
-        if (pt[0] > - 3) and (pt[0] < 70) and (pt[1] > -25) and (pt[1] < 25):
+        if (pt[0] > - 3) and (pt[0] < 70) and (pt[1] > -35) and (pt[1] < 35):
             
             pt = np.array(pt * imu_to_velo_rot)[0]
             new_point = np.dot(pt,q_int.rotation_matrix) + enu[IMU_idx] + d_pos;
@@ -287,7 +287,7 @@ def translate_points_arr(pts, imu_to_velo_rot,
             if (cnt%step == 0):
                 print(cnt*100/points_num,"%")
             
-        print(IMU_idx)
+    print(IMU_idx)
                 
     return np.array(out),np.array(enus), np.array(frames)-1, np.array(qs)
     #d_pos, q_int
